@@ -93,15 +93,15 @@
                             <!-- Pin Mode Button (Supports 3 Modes: PinnedTopmost, PinnedNormal, AutoHide) -->
                             <Button x:Name="PinButton"
                                     Style="{StaticResource HeaderBtnStyle}"
-                                    ToolTip="常驻模式 (点击切换)"
+                                    ToolTip="{DynamicResource Lang_BtnPin}"
                                     Click="PinButton_Click"
                                     PreviewMouseRightButtonDown="PinButton_PreviewMouseRightButtonDown"
                                     Margin="2,0">
                                 <Button.ContextMenu>
                                     <ContextMenu x:Name="PinContextMenu">
-                                        <MenuItem x:Name="PinMenuTopmost" Header="常驻且置顶" Click="PinMenuTopmost_Click"/>
-                                        <MenuItem x:Name="PinMenuNormal" Header="常驻但不置顶" Click="PinMenuNormal_Click"/>
-                                        <MenuItem x:Name="PinMenuAutoHide" Header="失焦自动收起" Click="PinMenuAutoHide_Click"/>
+                                        <MenuItem x:Name="PinMenuTopmost" Header="{DynamicResource Lang_PinTopmostHeader}" Click="PinMenuTopmost_Click"/>
+                                        <MenuItem x:Name="PinMenuNormal" Header="{DynamicResource Lang_PinNormalHeader}" Click="PinMenuNormal_Click"/>
+                                        <MenuItem x:Name="PinMenuAutoHide" Header="{DynamicResource Lang_PinAutoHideHeader}" Click="PinMenuAutoHide_Click"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
                                 <Grid Width="28" Height="28">
@@ -126,7 +126,7 @@
                             <!-- Zoom Presets Button -->
                             <Button x:Name="ZoomButton"
                                     Style="{StaticResource HeaderBtnStyle}"
-                                    ToolTip="缩放比例 (点击切换 100% / 90% / 80%)"
+                                    ToolTip="{DynamicResource Lang_BtnZoom}"
                                     Click="ZoomButton_Click"
                                     Margin="2,0">
                                 <TextBlock x:Name="ZoomText" Text="90%" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
@@ -134,7 +134,7 @@
 
                             <!-- Refresh Button -->
                             <Button Style="{StaticResource HeaderBtnStyle}"
-                                    ToolTip="刷新页面 (Refresh)"
+                                    ToolTip="{DynamicResource Lang_BtnRefresh}"
                                     Click="RefreshButton_Click"
                                     Margin="2,0">
                                 <TextBlock Text="🔄" FontSize="13" Foreground="#64748B"/>
@@ -142,7 +142,7 @@
 
                             <!-- Open in External Browser Button -->
                             <Button Style="{StaticResource HeaderBtnStyle}"
-                                    ToolTip="在默认浏览器中打开当前对话"
+                                    ToolTip="{DynamicResource Lang_BtnBrowser}"
                                     Click="ExternalBrowserButton_Click"
                                     Margin="2,0">
                                 <Viewbox Width="16" Height="16">
@@ -168,7 +168,7 @@
                             <!-- Settings Button -->
                             <Button x:Name="SettingsButton"
                                     Style="{StaticResource HeaderBtnStyle}"
-                                    ToolTip="偏好设置"
+                                    ToolTip="{DynamicResource Lang_SettingsTitle}"
                                     Click="SettingsButton_Click"
                                     Margin="2,0">
                                 <TextBlock Text="⚙" FontSize="14" Foreground="#64748B"/>
@@ -176,7 +176,7 @@
 
                             <!-- Close / Hide Button -->
                             <Button Style="{StaticResource HeaderBtnStyle}"
-                                    ToolTip="收起抽屉"
+                                    ToolTip="{DynamicResource Lang_BtnClose}"
                                     Click="CloseButton_Click"
                                     Margin="2,0">
                                 <TextBlock Text="✕" FontSize="12" FontWeight="SemiBold" Foreground="#64748B"/>

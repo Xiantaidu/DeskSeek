@@ -372,14 +372,24 @@ namespace DeskSeek.Views
             _collapseTimer.Stop();
 
             string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
+            string toggleBase = LocalizationService.Instance.GetString("Lang_MenuToggle");
             if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
             {
-                MenuToggleItem.Header = "显示 / 隐藏";
+                MenuToggleItem.Header = toggleBase;
             }
             else
             {
-                MenuToggleItem.Header = $"显示 / 隐藏 ({hk})";
+                MenuToggleItem.Header = $"{toggleBase} ({hk})";
             }
+
+            MenuAutoStartItem.Header = LocalizationService.Instance.GetString("Lang_MenuAutoStart");
+            MenuPinTopmostItem.Header = LocalizationService.Instance.GetString("Lang_PinTopmostHeader");
+            MenuPinNormalItem.Header = LocalizationService.Instance.GetString("Lang_PinNormalHeader");
+            MenuPinAutoHideItem.Header = LocalizationService.Instance.GetString("Lang_PinAutoHideHeader");
+            MenuSettingsItem.Header = LocalizationService.Instance.GetString("Lang_MenuSettings");
+            MenuResetBallItem.Header = LocalizationService.Instance.GetString("Lang_MenuResetBall");
+            MenuOpenBrowserItem.Header = LocalizationService.Instance.GetString("Lang_MenuOpenBrowser");
+            MenuExitItem.Header = LocalizationService.Instance.GetString("Lang_MenuExit");
 
             MenuAutoStartItem.IsChecked = AutoStartService.IsAutoStartEnabled();
             var currentMode = _settingsService?.Current.PinMode ?? DrawerPinMode.AutoHide;

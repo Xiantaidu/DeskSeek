@@ -11,15 +11,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}">
+                        <Border x:Name="bd" CornerRadius="6" Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#15000000"/>
+                                <Setter TargetName="bd" Property="Background" Value="#E2E8F0"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#25000000"/>
+                                <Setter TargetName="bd" Property="Background" Value="#CBD5E1"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -42,15 +42,15 @@
                         Background="Transparent"
                         BorderThickness="0"
                         Cursor="Hand"
-                        ToolTip="返回对话"
+                        ToolTip="{DynamicResource Lang_BackToChat}"
                         Click="BackFromSettingsButton_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="←" FontSize="14" FontWeight="Bold" Foreground="#0052D9" VerticalAlignment="Center"/>
-                        <TextBlock Text=" 返回对话" FontSize="13" FontWeight="SemiBold" Foreground="#0052D9" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                        <TextBlock Text="{DynamicResource Lang_BackToChat}" FontSize="13" FontWeight="SemiBold" Foreground="#0052D9" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     </StackPanel>
                 </Button>
 
-                <TextBlock Text="偏好设置"
+                <TextBlock Text="{DynamicResource Lang_SettingsTitle}"
                            FontSize="14"
                            FontWeight="Bold"
                            Foreground="#0F172A"
@@ -62,15 +62,63 @@
         <!-- Settings Body -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="16,12">
             <StackPanel>
+                <!-- Section 0: 界面语言 / Language -->
+                <TextBlock Text="{DynamicResource Lang_SecLanguage}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <Grid Margin="0,2">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Lang_LanguageTitle}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="{DynamicResource Lang_LanguageDesc}" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
+
+                        <!-- Segmented language switch buttons -->
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Background="#F1F5F9" CornerRadius="8" Padding="3">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="LangZhButton"
+                                        Content="简体中文"
+                                        FontSize="11.5" FontWeight="SemiBold"
+                                        Padding="12,5"
+                                        Background="#0052D9"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Click="LangZhButton_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button x:Name="LangEnButton"
+                                        Content="English"
+                                        FontSize="11.5" FontWeight="SemiBold"
+                                        Padding="12,5"
+                                        Background="Transparent"
+                                        Foreground="#64748B"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Click="LangEnButton_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
                 <!-- Section 1: 基础与窗口 -->
-                <TextBlock Text="基础与窗口" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <TextBlock Text="{DynamicResource Lang_SecGeneral}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <StackPanel>
                         <!-- Auto Start -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="开机自启" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="系统开机后自动常驻系统托盘" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoStart}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoStartDesc}" FontSize="11" Foreground="#94A3B8"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingAutoStart" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoStart_Click"/>
                         </Grid>
@@ -79,8 +127,8 @@
                         <!-- Auto Collapse -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="贴边闲置半隐藏" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="悬浮球靠边闲置 2.5 秒后自动缩为极细边缘条" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoCollapse}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoCollapseDesc}" FontSize="11" Foreground="#94A3B8"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingAutoCollapse" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoCollapse_Click"/>
                         </Grid>
@@ -88,14 +136,14 @@
                 </Border>
 
                 <!-- Section 2: 主界面位置记忆 -->
-                <TextBlock Text="主界面位置记忆" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <TextBlock Text="{DynamicResource Lang_SecPositionMemory}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <StackPanel>
                         <!-- Remember X -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="记住 X 轴位置 (横向)" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="唤出时还原上次水平停靠位置（取消则自动靠紧屏幕边缘）" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberX}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberXDesc}" FontSize="11" Foreground="#94A3B8"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingRememberX" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberX_Click"/>
                         </Grid>
@@ -104,8 +152,8 @@
                         <!-- Remember Y -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="记住 Y 轴位置 (纵向)" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="唤出时还原上次垂直拖动高度（取消则默认靠顶居齐）" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberY}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberYDesc}" FontSize="11" Foreground="#94A3B8"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingRememberY" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberY_Click"/>
                         </Grid>
@@ -113,13 +161,13 @@
                 </Border>
 
                 <!-- Section 3: 快捷键与唤醒 -->
-                <TextBlock Text="快捷键与唤醒" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <TextBlock Text="{DynamicResource Lang_SecHotkey}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <Grid Margin="0,2">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="全局唤醒热键" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="点击右侧录制框后在键盘直接按下快捷键" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_GlobalHotkey}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="{DynamicResource Lang_HotkeyDesc}" FontSize="11" Foreground="#94A3B8"/>
                             </StackPanel>
 
                             <!-- Hotkey Recorder and Clear Buttons -->
@@ -133,7 +181,7 @@
                                         Padding="8,5"
                                         Cursor="Hand"
                                         Focusable="True"
-                                        ToolTip="点击后在键盘按下想要设置的任意组合键，按 Esc 取消"
+                                        ToolTip="{DynamicResource Lang_HotkeyPrompt}"
                                         MouseLeftButtonDown="HotkeyRecordBorder_MouseLeftButtonDown"
                                         KeyDown="HotkeyRecordBorder_KeyDown"
                                         LostFocus="HotkeyRecordBorder_LostFocus">
@@ -156,16 +204,15 @@
                                         Background="#F1F5F9"
                                         BorderThickness="0"
                                         Cursor="Hand"
-                                        ToolTip="关闭全局快捷键"
                                         Click="ClearHotkeyButton_Click">
-                                    <TextBlock Text="设为无" FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="{DynamicResource Lang_HotkeyDisabledChip}" FontSize="11" Foreground="#64748B"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
 
                         <!-- Quick Preset Chips -->
                         <WrapPanel Margin="0,10,0,2">
-                            <TextBlock Text="常用预设：" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Presets:" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Alt+D">
                                 <TextBlock Text="Alt+D" FontSize="11" Foreground="#475569"/>
                             </Button>
@@ -182,7 +229,7 @@
                                 <TextBlock Text="F9" FontSize="11" Foreground="#475569"/>
                             </Button>
                             <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="无">
-                                <TextBlock Text="无 (禁用)" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_HotkeyDisabledChip}" FontSize="11" Foreground="#94A3B8"/>
                             </Button>
                         </WrapPanel>
 
@@ -196,26 +243,26 @@
                 </Border>
 
                 <!-- Section 4: 性能与内存优化 -->
-                <TextBlock Text="性能与内存优化" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <TextBlock Text="{DynamicResource Lang_SecPerformance}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,4">
                         <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
-                            <TextBlock Text="后台休眠省内存" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="抽屉收起后自动挂起内核释放内存与 CPU" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_Suspend}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="{DynamicResource Lang_SuspendDesc}" FontSize="11" Foreground="#94A3B8"/>
                         </StackPanel>
                         <CheckBox x:Name="SettingSuspend" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingSuspend_Click"/>
                     </Grid>
                 </Border>
 
                 <!-- Section 5: 尺寸与重置 -->
-                <TextBlock Text="尺寸与排版" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <TextBlock Text="{DynamicResource Lang_SecLayout}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,4">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="重置侧边栏尺寸" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="恢复默认宽度 460px 及屏幕可用高度" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_ResetSize}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="{DynamicResource Lang_ResetSizeDesc}" FontSize="11" Foreground="#94A3B8"/>
                         </StackPanel>
-                        <Button Content="重置尺寸"
+                        <Button Content="{DynamicResource Lang_BtnReset}"
                                 Padding="12,5"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
@@ -227,14 +274,14 @@
                 </Border>
 
                 <!-- Section 6: 数据与存储 -->
-                <TextBlock Text="数据与存储" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <TextBlock Text="{DynamicResource Lang_SecData}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,4">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="本地配置与数据目录" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="保存登录 Cookie 及 JSON 配置文件" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_LocalData}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="{DynamicResource Lang_LocalDataDesc}" FontSize="11" Foreground="#94A3B8"/>
                         </StackPanel>
-                        <Button Content="打开目录"
+                        <Button Content="{DynamicResource Lang_BtnOpenDir}"
                                 Padding="12,5"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
@@ -249,7 +296,7 @@
                 <Border Background="Transparent" Padding="4,10" HorizontalAlignment="Center">
                     <StackPanel HorizontalAlignment="Center">
                         <TextBlock Text="DeskSeek v1.1.0" FontSize="12" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
-                        <TextBlock Text="极简轻量 · 官方直连 · 原生体验" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="{DynamicResource Lang_AboutSlogan}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

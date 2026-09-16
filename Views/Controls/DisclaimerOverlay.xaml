@@ -16,8 +16,8 @@
                     <TextBlock Text="🛡️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="免责声明与服务协议" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
-                    <TextBlock Text="首次使用请仔细阅读并知悉以下规范" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerTitle}" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSubtitle}" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
@@ -31,20 +31,20 @@
                 Padding="16,14">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
-                    <TextBlock Text="一、第三方非官方声明" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
-                    <TextBlock Text="DeskSeek 为独立的开源第三方轻量桌面辅助客户端，其核心功能为提供贴边吸附与便捷唤起的 DeepSeek 网页版（chat.deepseek.com）容器。DeskSeek 与 DeepSeek（杭州深度求索人工智能基础技术研究有限公司）官方不存在任何商业合作、投资或运营隶属关系。"
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec1Title}" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec1Content}"
                                FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,12"/>
 
-                    <TextBlock Text="二、隐私安全与数据传输" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
-                    <TextBlock Text="本软件坚守纯粹轻量原则，完全依托系统原生 WebView2 运行。软件本身绝不拦截、窃取、存储或上传您的任何 DeepSeek 账户、密码、Token、Cookies 或对话记录。所有通信均直接在您的本地设备与 DeepSeek 官方服务器间通过 HTTPS 加密进行。"
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec2Title}" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec2Content}"
                                FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,12"/>
 
-                    <TextBlock Text="三、使用规范与合规责任" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
-                    <TextBlock Text="用户在使用 DeskSeek 及 DeepSeek 网页版时，应自觉遵守国家法律法规以及 DeepSeek 官方制定的《服务条款》和《用户协议》。使用者不得利用本软件从事任何危害网络安全、侵犯他人隐私或违反相关法律规定的活动。"
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec3Title}" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec3Content}"
                                FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,12"/>
 
-                    <TextBlock Text="四、免责条款" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
-                    <TextBlock Text="本软件遵循 Apache-2.0 开源许可协议提供，按“现状”（AS-IS）分发，不提供任何形式的明示或暗示担保。因网络环境不稳定、DeepSeek 官方网页端架构调整或不可抗力导致的服务中断或异常，本软件开发者不承担任何附带或连带法律责任。"
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec4Title}" FontSize="12.5" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                    <TextBlock Text="{DynamicResource Lang_DisclaimerSec4Content}"
                                FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="18"/>
                 </StackPanel>
             </ScrollViewer>
@@ -58,7 +58,7 @@
                       Margin="2,0,0,12"
                       Cursor="Hand"
                       Click="DisclaimerCheckBox_Click">
-                <TextBlock Text="我已充分阅读、理解并同意上述免责声明与服务协议"
+                <TextBlock Text="{DynamicResource Lang_DisclaimerCheck}"
                            FontSize="12"
                            FontWeight="Medium"
                            Foreground="#334155"

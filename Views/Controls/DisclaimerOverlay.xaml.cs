@@ -22,6 +22,7 @@ namespace DeskSeek.Views.Controls
         public DisclaimerOverlay()
         {
             InitializeComponent();
+            LocalizationService.Instance.LanguageChanged += _ => UpdateButtonText();
         }
 
         public DisclaimerOverlay(SettingsService settingsService) : this()
@@ -39,7 +40,7 @@ namespace DeskSeek.Views.Controls
             DisclaimerAgreeButton.IsEnabled = false;
             DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
             DisclaimerAgreeButton.Cursor = Cursors.No;
-            DisclaimerButtonText.Text = $"请先阅读免责声明 ({_countdown}s)";
+            UpdateButtonText();
 
             _disclaimerTimer = new DispatcherTimer
             {
@@ -50,17 +51,33 @@ namespace DeskSeek.Views.Controls
                 _countdown--;
                 if (_countdown > 0)
                 {
-                    DisclaimerButtonText.Text = $"请先阅读免责声明 ({_countdown}s)";
+                    UpdateButtonText();
                 }
                 else
                 {
                     _disclaimerTimer.Stop();
                     _disclaimerTimer = null;
                     DisclaimerCheckBox.IsEnabled = true;
-                    DisclaimerButtonText.Text = "请勾选已阅读同意";
+                    UpdateButtonText();
                 }
             };
             _disclaimerTimer.Start();
+        }
+
+        private void UpdateButtonText()
+        {
+            if (DisclaimerCheckBox.IsChecked == true)
+            {
+                DisclaimerButtonText.Text = LocalizationService.Instance.GetString("Lang_DisclaimerBtn");
+            }
+            else if (_countdown > 0)
+            {
+                DisclaimerButtonText.Text = string.Format(LocalizationService.Instance.GetString("Lang_DisclaimerCountdown"), _countdown);
+            }
+            else
+            {
+                DisclaimerButtonText.Text = LocalizationService.Instance.GetString("Lang_DisclaimerPleaseCheck");
+            }
         }
 
         private void DisclaimerCheckBox_Click(object sender, RoutedEventArgs e)
@@ -71,17 +88,14 @@ namespace DeskSeek.Views.Controls
                 DisclaimerAgreeButton.IsEnabled = true;
                 DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
                 DisclaimerAgreeButton.Cursor = Cursors.Hand;
-                DisclaimerButtonText.Text = "同意并开始使用";
             }
             else
             {
                 DisclaimerAgreeButton.IsEnabled = false;
                 DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
                 DisclaimerAgreeButton.Cursor = Cursors.No;
-                DisclaimerButtonText.Text = _countdown > 0
-                    ? $"请先阅读免责声明 ({_countdown}s)"
-                    : "请勾选已阅读同意";
             }
+            UpdateButtonText();
         }
 
         private void DisclaimerAgreeButton_Click(object sender, RoutedEventArgs e)

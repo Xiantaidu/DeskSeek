@@ -41,9 +41,11 @@ namespace DeskSeek
             _instanceMutex = new Mutex(true, MutexName, out bool createdNew);
             if (!createdNew)
             {
+                var tempSettings = new SettingsService();
+                LocalizationService.Instance.Initialize(tempSettings.Current.Language);
                 System.Windows.MessageBox.Show(
-                    "DeskSeek 已经在运行中！可通过贴边悬浮球、快捷键 Alt+D 或右下角托盘图标唤出。",
-                    "DeskSeek 已启动",
+                    LocalizationService.Instance.GetString("Lang_SingleInstanceMsg"),
+                    LocalizationService.Instance.GetString("Lang_SingleInstanceTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
                 Shutdown();
@@ -53,6 +55,7 @@ namespace DeskSeek
             base.OnStartup(e);
 
             _settingsService = new SettingsService();
+            LocalizationService.Instance.Initialize(_settingsService.Current.Language);
 
             // Initialize Windows
             _ballWindow = new FloatingBallWindow(_settingsService);
@@ -111,18 +114,58 @@ namespace DeskSeek
             return false;
         }
 
+        private ToolStripMenuItem? _trayToggleItem;
+        private ToolStripMenuItem? _trayAutoStartItem;
+        private ToolStripMenuItem? _trayPinTopmostItem;
+        private ToolStripMenuItem? _trayPinNormalItem;
+        private ToolStripMenuItem? _trayPinAutoHideItem;
+        private ToolStripMenuItem? _traySettingsItem;
+        private ToolStripMenuItem? _trayResetItem;
+        private ToolStripMenuItem? _trayOpenBrowserItem;
+        private ToolStripMenuItem? _trayExitItem;
+
         public void UpdateTrayTooltip()
         {
             if (_trayIcon == null) return;
             string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
-            if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
+            string prefix = LocalizationService.Instance.GetString("Lang_TrayTooltipPrefix");
+            string text = (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
+                ? $"{prefix} ({LocalizationService.Instance.GetString("Lang_TrayNoHotkey")})"
+                : $"{prefix} ({hk})";
+
+            if (text.Length > 63)
             {
-                _trayIcon.Text = "DeskSeek - DeepSeek 桌面轻量吸附窗 (未设置快捷键)";
+                text = text.Substring(0, 63);
             }
-            else
+            _trayIcon.Text = text;
+        }
+
+        public void UpdateTrayMenuTexts()
+        {
+            if (_trayToggleItem != null)
             {
-                _trayIcon.Text = $"DeskSeek - DeepSeek 桌面轻量吸附窗 ({hk})";
+                string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
+                string baseToggle = LocalizationService.Instance.GetString("Lang_MenuToggle");
+                if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
+                {
+                    _trayToggleItem.Text = baseToggle;
+                }
+                else
+                {
+                    _trayToggleItem.Text = $"{baseToggle} ({hk})";
+                }
             }
+
+            if (_trayAutoStartItem != null) _trayAutoStartItem.Text = LocalizationService.Instance.GetString("Lang_MenuAutoStart");
+            if (_trayPinTopmostItem != null) _trayPinTopmostItem.Text = LocalizationService.Instance.GetString("Lang_PinTopmostHeader");
+            if (_trayPinNormalItem != null) _trayPinNormalItem.Text = LocalizationService.Instance.GetString("Lang_PinNormalHeader");
+            if (_trayPinAutoHideItem != null) _trayPinAutoHideItem.Text = LocalizationService.Instance.GetString("Lang_PinAutoHideHeader");
+            if (_traySettingsItem != null) _traySettingsItem.Text = LocalizationService.Instance.GetString("Lang_MenuSettings");
+            if (_trayResetItem != null) _trayResetItem.Text = LocalizationService.Instance.GetString("Lang_MenuResetBall");
+            if (_trayOpenBrowserItem != null) _trayOpenBrowserItem.Text = LocalizationService.Instance.GetString("Lang_MenuOpenBrowser");
+            if (_trayExitItem != null) _trayExitItem.Text = LocalizationService.Instance.GetString("Lang_MenuExit");
+
+            UpdateTrayTooltip();
         }
 
         public void SetPinMode(DrawerPinMode mode)
@@ -162,11 +205,10 @@ namespace DeskSeek
                 Visible = true,
                 Icon = GenerateAppIcon()
             };
-            UpdateTrayTooltip();
 
             var contextMenu = new ContextMenuStrip();
 
-            var toggleItem = new ToolStripMenuItem("显示 / 隐藏 (Alt+D)", null, (s, e) =>
+            _trayToggleItem = new ToolStripMenuItem("显示 / 隐藏", null, (s, e) =>
             {
                 if (_ballWindow != null && _drawerWindow != null)
                 {
@@ -176,40 +218,40 @@ namespace DeskSeek
             {
                 Font = new Font(contextMenu.Font, System.Drawing.FontStyle.Bold)
             };
-            contextMenu.Items.Add(toggleItem);
+            contextMenu.Items.Add(_trayToggleItem);
 
             contextMenu.Items.Add(new ToolStripSeparator());
 
             // Auto-start with Windows toggle
-            var autoStartItem = new ToolStripMenuItem("开机自启")
+            _trayAutoStartItem = new ToolStripMenuItem("开机自启")
             {
                 Checked = AutoStartService.IsAutoStartEnabled(),
                 CheckOnClick = true
             };
-            autoStartItem.Click += (s, e) =>
+            _trayAutoStartItem.Click += (s, e) =>
             {
-                AutoStartService.SetAutoStart(autoStartItem.Checked);
+                AutoStartService.SetAutoStart(_trayAutoStartItem.Checked);
                 if (_settingsService != null)
                 {
-                    _settingsService.Current.AutoStart = autoStartItem.Checked;
+                    _settingsService.Current.AutoStart = _trayAutoStartItem.Checked;
                     _settingsService.Save();
                 }
             };
-            contextMenu.Items.Add(autoStartItem);
+            contextMenu.Items.Add(_trayAutoStartItem);
 
             // Pin modes
-            var pinTopmostItem = new ToolStripMenuItem("常驻且置顶", null, (s, e) => SetPinMode(DrawerPinMode.PinnedTopmost));
-            var pinNormalItem = new ToolStripMenuItem("常驻但不置顶", null, (s, e) => SetPinMode(DrawerPinMode.PinnedNormal));
-            var pinAutoHideItem = new ToolStripMenuItem("失焦自动收起", null, (s, e) => SetPinMode(DrawerPinMode.AutoHide));
+            _trayPinTopmostItem = new ToolStripMenuItem("常驻且置顶", null, (s, e) => SetPinMode(DrawerPinMode.PinnedTopmost));
+            _trayPinNormalItem = new ToolStripMenuItem("常驻但不置顶", null, (s, e) => SetPinMode(DrawerPinMode.PinnedNormal));
+            _trayPinAutoHideItem = new ToolStripMenuItem("失焦自动收起", null, (s, e) => SetPinMode(DrawerPinMode.AutoHide));
 
-            contextMenu.Items.Add(pinTopmostItem);
-            contextMenu.Items.Add(pinNormalItem);
-            contextMenu.Items.Add(pinAutoHideItem);
+            contextMenu.Items.Add(_trayPinTopmostItem);
+            contextMenu.Items.Add(_trayPinNormalItem);
+            contextMenu.Items.Add(_trayPinAutoHideItem);
 
             contextMenu.Items.Add(new ToolStripSeparator());
 
             // Settings
-            var settingsItem = new ToolStripMenuItem("偏好设置...", null, (s, e) =>
+            _traySettingsItem = new ToolStripMenuItem("偏好设置...", null, (s, e) =>
             {
                 if (_ballWindow != null && _drawerWindow != null)
                 {
@@ -217,49 +259,48 @@ namespace DeskSeek
                     _drawerWindow.OpenSettings();
                 }
             });
-            contextMenu.Items.Add(settingsItem);
+            contextMenu.Items.Add(_traySettingsItem);
 
             // Reset ball position
-            var resetItem = new ToolStripMenuItem("重置悬浮球位置", null, (s, e) =>
+            _trayResetItem = new ToolStripMenuItem("重置悬浮球位置", null, (s, e) =>
             {
                 _ballWindow?.ResetBallPosition();
             });
-            contextMenu.Items.Add(resetItem);
+            contextMenu.Items.Add(_trayResetItem);
 
             // Open in browser
-            var openBrowserItem = new ToolStripMenuItem("在浏览器中打开当前对话", null, (s, e) =>
+            _trayOpenBrowserItem = new ToolStripMenuItem("在浏览器中打开当前对话", null, (s, e) =>
             {
                 OpenCurrentUrlInExternalBrowser();
             });
-            contextMenu.Items.Add(openBrowserItem);
+            contextMenu.Items.Add(_trayOpenBrowserItem);
 
             contextMenu.Items.Add(new ToolStripSeparator());
 
             // Exit
-            var exitItem = new ToolStripMenuItem("退出 DeskSeek", null, (s, e) =>
+            _trayExitItem = new ToolStripMenuItem("退出 DeskSeek", null, (s, e) =>
             {
                 ExitApp();
             });
-            contextMenu.Items.Add(exitItem);
+            contextMenu.Items.Add(_trayExitItem);
 
             contextMenu.Opening += (s, e) =>
             {
-                string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
-                if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
-                {
-                    toggleItem.Text = "显示 / 隐藏";
-                }
-                else
-                {
-                    toggleItem.Text = $"显示 / 隐藏 ({hk})";
-                }
+                UpdateTrayMenuTexts();
 
-                autoStartItem.Checked = AutoStartService.IsAutoStartEnabled();
+                if (_trayAutoStartItem != null) _trayAutoStartItem.Checked = AutoStartService.IsAutoStartEnabled();
                 var currentMode = _drawerWindow?.PinMode ?? _settingsService?.Current.PinMode ?? DrawerPinMode.AutoHide;
-                pinTopmostItem.Checked = (currentMode == DrawerPinMode.PinnedTopmost);
-                pinNormalItem.Checked = (currentMode == DrawerPinMode.PinnedNormal);
-                pinAutoHideItem.Checked = (currentMode == DrawerPinMode.AutoHide);
+                if (_trayPinTopmostItem != null) _trayPinTopmostItem.Checked = (currentMode == DrawerPinMode.PinnedTopmost);
+                if (_trayPinNormalItem != null) _trayPinNormalItem.Checked = (currentMode == DrawerPinMode.PinnedNormal);
+                if (_trayPinAutoHideItem != null) _trayPinAutoHideItem.Checked = (currentMode == DrawerPinMode.AutoHide);
             };
+
+            LocalizationService.Instance.LanguageChanged += (lang) =>
+            {
+                UpdateTrayMenuTexts();
+            };
+
+            UpdateTrayMenuTexts();
 
             _trayIcon.ContextMenuStrip = contextMenu;
 

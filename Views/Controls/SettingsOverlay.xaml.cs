@@ -38,6 +38,8 @@ namespace DeskSeek.Views.Controls
         {
             if (_settingsService == null) return;
 
+            UpdateLanguageUi();
+
             SettingAutoStart.IsChecked = AutoStartService.IsAutoStartEnabled();
             SettingAutoCollapse.IsChecked = _settingsService.Current.AutoCollapse;
             SettingSuspend.IsChecked = _settingsService.Current.SuspendWhenHidden;
@@ -47,6 +49,50 @@ namespace DeskSeek.Views.Controls
             UpdateHotkeyDisplay(_settingsService.Current.Hotkey);
             StopRecordingHotkey();
             HotkeyStatusTip.Visibility = Visibility.Collapsed;
+        }
+
+        private void LangZhButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetLanguage(LocalizationService.Chinese);
+        }
+
+        private void LangEnButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetLanguage(LocalizationService.English);
+        }
+
+        private void SetLanguage(string lang)
+        {
+            LocalizationService.Instance.SetLanguage(lang);
+            if (_settingsService != null)
+            {
+                _settingsService.Current.Language = lang;
+                _settingsService.Save();
+            }
+            UpdateLanguageUi();
+            if (_settingsService != null)
+            {
+                UpdateHotkeyDisplay(_settingsService.Current.Hotkey);
+            }
+        }
+
+        private void UpdateLanguageUi()
+        {
+            bool isZh = LocalizationService.Instance.CurrentLanguage != LocalizationService.English;
+
+            LangZhButton.Background = isZh
+                ? new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9))
+                : Brushes.Transparent;
+            LangZhButton.Foreground = isZh
+                ? Brushes.White
+                : new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+
+            LangEnButton.Background = !isZh
+                ? new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9))
+                : Brushes.Transparent;
+            LangEnButton.Foreground = !isZh
+                ? Brushes.White
+                : new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
         }
 
         private void BackFromSettingsButton_Click(object sender, RoutedEventArgs e)
@@ -125,7 +171,7 @@ namespace DeskSeek.Views.Controls
         {
             if (string.IsNullOrWhiteSpace(hotkey) || hotkey == "无" || hotkey.Equals("None", StringComparison.OrdinalIgnoreCase))
             {
-                HotkeyDisplayText.Text = "无 (已禁用)";
+                HotkeyDisplayText.Text = LocalizationService.Instance.GetString("Lang_HotkeyNoneText");
                 HotkeyDisplayText.Foreground = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
                 HotkeyRecordIcon.Text = "🚫";
             }
@@ -146,7 +192,7 @@ namespace DeskSeek.Views.Controls
         private void StartRecordingHotkey()
         {
             _isRecordingHotkey = true;
-            HotkeyDisplayText.Text = "请在键盘直接按下快捷键...";
+            HotkeyDisplayText.Text = LocalizationService.Instance.GetString("Lang_HotkeyRecordingText");
             HotkeyDisplayText.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
             HotkeyRecordIcon.Text = "🔴";
             HotkeyRecordBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
@@ -276,15 +322,19 @@ namespace DeskSeek.Views.Controls
             bool success = App.Instance?.ReloadHotkey(hotkey) ?? true;
             UpdateHotkeyDisplay(hotkey);
 
-            if (!success && hotkey != "无")
+            bool isNone = string.IsNullOrWhiteSpace(hotkey) || hotkey == "无" || hotkey.Equals("None", StringComparison.OrdinalIgnoreCase);
+
+            if (!success && !isNone)
             {
-                HotkeyStatusTip.Text = "⚠️ 热键注册失败：可能已被系统或其他应用占用";
+                HotkeyStatusTip.Text = LocalizationService.Instance.GetString("Lang_HotkeyFailedMsg");
                 HotkeyStatusTip.Foreground = new SolidColorBrush(Color.FromRgb(0xEF, 0x44, 0x44));
                 HotkeyStatusTip.Visibility = Visibility.Visible;
             }
             else
             {
-                HotkeyStatusTip.Text = hotkey == "无" ? "已禁用快捷键唤醒" : $"✓ 热键已生效：{hotkey}";
+                HotkeyStatusTip.Text = isNone
+                    ? LocalizationService.Instance.GetString("Lang_HotkeyDisabledMsg")
+                    : LocalizationService.Instance.GetString("Lang_HotkeySuccessPrefix") + hotkey;
                 HotkeyStatusTip.Foreground = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
                 HotkeyStatusTip.Visibility = Visibility.Visible;
             }

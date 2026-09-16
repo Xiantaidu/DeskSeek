@@ -57,6 +57,8 @@ namespace DeskSeek.Views
             SetPinMode(_settingsService.Current.PinMode, save: false);
             UpdateZoomUi();
 
+            LocalizationService.Instance.LanguageChanged += (lang) => UpdatePinUi();
+
             Loaded += (s, e) =>
             {
                 _ = PreloadAsync();
@@ -349,8 +351,8 @@ namespace DeskSeek.Views
                     PinIcon.Foreground = Brushes.White;
                     PinBadge.Visibility = Visibility.Visible;
                     PinBadge.Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
-                    PinBadgeText.Text = "顶";
-                    PinButton.ToolTip = "当前模式：常驻且置顶\n• 失焦不收起，窗口始终置顶最前\n• 左键点击切换为：常驻但不置顶\n• 右键点击可直接选择模式";
+                    PinBadgeText.Text = LocalizationService.Instance.GetString("Lang_PinTopmostBadge");
+                    PinButton.ToolTip = LocalizationService.Instance.GetString("Lang_PinTopmostTip");
                     break;
 
                 case DrawerPinMode.PinnedNormal:
@@ -358,8 +360,8 @@ namespace DeskSeek.Views
                     PinIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
                     PinBadge.Visibility = Visibility.Visible;
                     PinBadge.Background = new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
-                    PinBadgeText.Text = "驻";
-                    PinButton.ToolTip = "当前模式：常驻但不置顶\n• 失焦不收起，允许被其他窗口遮挡\n• 左键点击切换为：失焦自动收起\n• 右键点击可直接选择模式";
+                    PinBadgeText.Text = LocalizationService.Instance.GetString("Lang_PinNormalBadge");
+                    PinButton.ToolTip = LocalizationService.Instance.GetString("Lang_PinNormalTip");
                     break;
 
                 case DrawerPinMode.AutoHide:
@@ -367,7 +369,7 @@ namespace DeskSeek.Views
                     PinButton.Background = Brushes.Transparent;
                     PinIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
                     PinBadge.Visibility = Visibility.Collapsed;
-                    PinButton.ToolTip = "当前模式：失焦自动收起\n• 随叫随到，点击其他地方时自动隐藏\n• 左键点击切换为：常驻且置顶\n• 右键点击可直接选择模式";
+                    PinButton.ToolTip = LocalizationService.Instance.GetString("Lang_PinAutoHideTip");
                     break;
             }
         }
