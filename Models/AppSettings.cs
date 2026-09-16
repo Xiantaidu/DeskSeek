@@ -14,5 +14,9 @@ namespace DeskSeek.Models
         public bool AutoCollapse { get; set; } = true;
         public bool SuspendWhenHidden { get; set; } = false;
         public bool DisclaimerAccepted { get; set; } = false;
+        public bool RememberX { get; set; } = true;
+        public bool RememberY { get; set; } = false;
+        public double LastDrawerX { get; set; } = -1;
+        public double LastDrawerY { get; set; } = -1;
     }
 }

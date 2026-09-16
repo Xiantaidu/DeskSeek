@@ -2,11 +2,13 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using Microsoft.Web.WebView2.Core;
 using DeskSeek.Helpers;
 using DeskSeek.Services;
@@ -36,9 +38,11 @@ namespace DeskSeek.Views
         // Resize state variables
         private bool _isResizingWidth;
         private bool _isResizingHeight;
+        private bool _isResizingFromLeft;
         private Point _resizeStartMouseScreen;
         private double _resizeStartWidth;
         private double _resizeStartHeight;
+        private double _resizeStartLeft;
 
         // First-launch disclaimer state
         private System.Windows.Threading.DispatcherTimer? _disclaimerTimer;
@@ -159,6 +163,9 @@ namespace DeskSeek.Views
             LeftResizeGrip.Visibility = _isDockedToRight ? Visibility.Visible : Visibility.Collapsed;
             RightResizeGrip.Visibility = _isDockedToRight ? Visibility.Collapsed : Visibility.Visible;
 
+            // Free the resize border area from HWND obstruction
+            WebBrowser.Margin = _isDockedToRight ? new Thickness(8, 0, 0, 0) : new Thickness(0, 0, 8, 0);
+
             double targetWidth = _settingsService.Current.DrawerWidth > 320
                 ? _settingsService.Current.DrawerWidth
                 : 460;
@@ -168,29 +175,51 @@ namespace DeskSeek.Views
                 ? _settingsService.Current.DrawerHeight
                 : (wa.Height - 32);
             Height = Math.Clamp(targetHeight, 400, wa.Height - 16);
-            Top = wa.Top + 16;
 
-            double targetLeft;
-            double startX;
-
-            if (_isDockedToRight)
+            // Compute Target Y (Vertical position memory)
+            double targetTop;
+            if (_settingsService.Current.RememberY && _settingsService.Current.LastDrawerY >= 0)
             {
-                targetLeft = wa.Right - Width + 4;
-                startX = Width; // Slide in from right
+                targetTop = Math.Clamp(_settingsService.Current.LastDrawerY, wa.Top, Math.Max(wa.Top, wa.Bottom - 100));
             }
             else
             {
-                targetLeft = wa.Left - 4;
-                startX = -Width; // Slide in from left
+                targetTop = wa.Top + 16;
+            }
+            Top = targetTop;
+
+            // Compute Target X (Horizontal position memory)
+            double targetLeft;
+
+            if (_settingsService.Current.RememberX && _settingsService.Current.LastDrawerX >= 0)
+            {
+                targetLeft = Math.Clamp(_settingsService.Current.LastDrawerX, wa.Left, Math.Max(wa.Left, wa.Right - Width));
+                bool isRightSide = (targetLeft + Width / 2) >= (wa.Left + wa.Right) / 2;
+                _isDockedToRight = isRightSide;
+                LeftResizeGrip.Visibility = _isDockedToRight ? Visibility.Visible : Visibility.Collapsed;
+                RightResizeGrip.Visibility = _isDockedToRight ? Visibility.Collapsed : Visibility.Visible;
+                var margin = _isDockedToRight ? new Thickness(8, 0, 0, 0) : new Thickness(0, 0, 8, 0);
+                WebBrowser.Margin = margin;
+                WebSnapshotImage.Margin = margin;
+            }
+            else
+            {
+                if (_isDockedToRight)
+                {
+                    targetLeft = wa.Right - Width + 4;
+                }
+                else
+                {
+                    targetLeft = wa.Left - 4;
+                }
+                var margin = _isDockedToRight ? new Thickness(8, 0, 0, 0) : new Thickness(0, 0, 8, 0);
+                WebBrowser.Margin = margin;
+                WebSnapshotImage.Margin = margin;
             }
 
             Left = targetLeft;
             _isClosing = false;
             _isOpening = true;
-
-            // Prepare initial GPU transform state
-            CardTranslate.X = startX;
-            MainCard.Opacity = 0.2;
 
             // Resume WebView2 if it was suspended
             if (WebBrowser.CoreWebView2 != null)
@@ -200,6 +229,23 @@ namespace DeskSeek.Views
                     WebBrowser.CoreWebView2.Resume();
                 }
                 catch { }
+            }
+
+            // Check if snapshot is available so web content and frame fade in together in lockstep
+            bool useSnapshot = (WebSnapshotImage.Source != null &&
+                                SettingsOverlay.Visibility != Visibility.Visible &&
+                                DisclaimerOverlay.Visibility != Visibility.Visible &&
+                                _settingsService.Current.DisclaimerAccepted);
+
+            if (useSnapshot)
+            {
+                WebSnapshotImage.Visibility = Visibility.Visible;
+                WebBrowser.Visibility = Visibility.Hidden;
+            }
+            else if (_settingsService.Current.DisclaimerAccepted && SettingsOverlay.Visibility != Visibility.Visible)
+            {
+                WebBrowser.Visibility = Visibility.Visible;
+                WebSnapshotImage.Visibility = Visibility.Collapsed;
             }
 
             try
@@ -215,7 +261,7 @@ namespace DeskSeek.Views
                     try
                     {
                         Activate();
-                        if (_settingsService.Current.DisclaimerAccepted)
+                        if (_settingsService.Current.DisclaimerAccepted && !useSnapshot)
                         {
                             WebBrowser.Focus();
                         }
@@ -228,29 +274,38 @@ namespace DeskSeek.Views
                 Debug.WriteLine($"[DeskSeek] ShowDrawer error: {ex.Message}");
             }
 
-            // Silky GPU-accelerated quintic deceleration slide
-            var animSlide = new DoubleAnimation(startX, 0, TimeSpan.FromMilliseconds(300))
-            {
-                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut }
-            };
-            var animFade = new DoubleAnimation(0.2, 1.0, TimeSpan.FromMilliseconds(240))
-            {
-                EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut }
-            };
+            // Silky unified fade-in across all elements
+            CardTranslate.BeginAnimation(TranslateTransform.XProperty, null);
+            CardTranslate.X = 0;
+            MainCard.Opacity = 0.0;
 
-            animSlide.Completed += (s, e) =>
+            var animFade = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(180))
             {
-                CardTranslate.X = 0;
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            animFade.Completed += (s, e) =>
+            {
+                MainCard.BeginAnimation(UIElement.OpacityProperty, null);
                 MainCard.Opacity = 1.0;
                 _isOpening = false;
                 DrawerToggled?.Invoke(true);
-            };
 
-            CardTranslate.BeginAnimation(TranslateTransform.XProperty, animSlide);
+                // Seamless handoff from snapshot image to live interactive WebBrowser
+                if (_settingsService.Current.DisclaimerAccepted && SettingsOverlay.Visibility != Visibility.Visible)
+                {
+                    WebBrowser.Visibility = Visibility.Visible;
+                    WebSnapshotImage.Visibility = Visibility.Collapsed;
+                    try
+                    {
+                        WebBrowser.Focus();
+                    }
+                    catch { }
+                }
+            };
             MainCard.BeginAnimation(UIElement.OpacityProperty, animFade);
         }
 
-        public void HideDrawer()
+        public async void HideDrawer()
         {
             if (_isClosing || Visibility != Visibility.Visible)
                 return;
@@ -258,22 +313,54 @@ namespace DeskSeek.Views
             _isClosing = true;
             _isOpening = false;
 
-            double endX = _isDockedToRight ? Width : -Width;
+            UpdateSavedPosition();
 
-            // Silky smooth slide out
-            var animSlide = new DoubleAnimation(CardTranslate.X, endX, TimeSpan.FromMilliseconds(240))
+            // Snapshot the live web page so it fades out identically with WPF chrome
+            if (WebBrowser.CoreWebView2 != null && WebBrowser.Visibility == Visibility.Visible && _settingsService.Current.DisclaimerAccepted)
             {
-                EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseIn }
-            };
-            var animFade = new DoubleAnimation(MainCard.Opacity, 0.0, TimeSpan.FromMilliseconds(200));
+                try
+                {
+                    using var ms = new MemoryStream();
+                    var captureTask = WebBrowser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, ms);
+                    var timeoutTask = Task.Delay(100);
+                    if (await Task.WhenAny(captureTask, timeoutTask) == captureTask)
+                    {
+                        ms.Position = 0;
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;
+                        bmp.StreamSource = ms;
+                        bmp.EndInit();
+                        bmp.Freeze();
 
-            animSlide.Completed += (s, e) =>
+                        WebSnapshotImage.Source = bmp;
+                        WebSnapshotImage.Margin = WebBrowser.Margin;
+                        WebSnapshotImage.Visibility = Visibility.Visible;
+                        WebBrowser.Visibility = Visibility.Hidden;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[DeskSeek] Snapshot capture error: {ex.Message}");
+                }
+            }
+
+            // Unified smooth fade-out: Chrome frame and WebSnapshotImage fade out together in 100% lockstep
+            var animFadeOut = new DoubleAnimation(MainCard.Opacity, 0.0, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+            };
+
+            animFadeOut.Completed += (s, e) =>
             {
                 Hide();
                 _isClosing = false;
                 DrawerToggled?.Invoke(false);
+                MainCard.BeginAnimation(UIElement.OpacityProperty, null);
+                MainCard.Opacity = 1.0;
+                CardTranslate.BeginAnimation(TranslateTransform.XProperty, null);
+                CardTranslate.X = 0;
 
-                // Suspend background WebView2 if user enabled it, drastically freeing RAM and CPU
                 if (_settingsService.Current.SuspendWhenHidden && WebBrowser.CoreWebView2 != null)
                 {
                     try
@@ -284,8 +371,7 @@ namespace DeskSeek.Views
                 }
             };
 
-            CardTranslate.BeginAnimation(TranslateTransform.XProperty, animSlide);
-            MainCard.BeginAnimation(UIElement.OpacityProperty, animFade);
+            MainCard.BeginAnimation(UIElement.OpacityProperty, animFadeOut);
         }
 
         public void ToggleDrawer(bool isDockedToRight)
@@ -343,6 +429,8 @@ namespace DeskSeek.Views
             SettingPin.IsChecked = _settingsService.Current.IsPinned;
             SettingAutoCollapse.IsChecked = _settingsService.Current.AutoCollapse;
             SettingSuspend.IsChecked = _settingsService.Current.SuspendWhenHidden;
+            SettingRememberX.IsChecked = _settingsService.Current.RememberX;
+            SettingRememberY.IsChecked = _settingsService.Current.RememberY;
 
             // Select current hotkey
             string currentHk = _settingsService.Current.Hotkey;
@@ -355,7 +443,8 @@ namespace DeskSeek.Views
                 }
             }
 
-            // Hide WebBrowser HwndHost to completely eliminate WPF airspace collision
+            // Hide WebBrowser and Snapshot to completely eliminate WPF airspace collision
+            WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Collapsed;
             SettingsOverlay.Visibility = Visibility.Visible;
         }
@@ -365,6 +454,7 @@ namespace DeskSeek.Views
             SettingsOverlay.Visibility = Visibility.Collapsed;
             if (_settingsService.Current.DisclaimerAccepted)
             {
+                WebSnapshotImage.Visibility = Visibility.Collapsed;
                 WebBrowser.Visibility = Visibility.Visible;
             }
         }
@@ -380,6 +470,7 @@ namespace DeskSeek.Views
 
         private void ShowDisclaimerOverlay()
         {
+            WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Collapsed;
             SettingsOverlay.Visibility = Visibility.Collapsed;
             DisclaimerOverlay.Visibility = Visibility.Visible;
@@ -448,6 +539,7 @@ namespace DeskSeek.Views
             _settingsService.Save();
 
             DisclaimerOverlay.Visibility = Visibility.Collapsed;
+            WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Visible;
             try
             {
@@ -500,6 +592,28 @@ namespace DeskSeek.Views
             _settingsService.Save();
         }
 
+        private void SettingRememberX_Click(object sender, RoutedEventArgs e)
+        {
+            bool val = SettingRememberX.IsChecked == true;
+            _settingsService.Current.RememberX = val;
+            if (val)
+            {
+                _settingsService.Current.LastDrawerX = Left;
+            }
+            _settingsService.Save();
+        }
+
+        private void SettingRememberY_Click(object sender, RoutedEventArgs e)
+        {
+            bool val = SettingRememberY.IsChecked == true;
+            _settingsService.Current.RememberY = val;
+            if (val)
+            {
+                _settingsService.Current.LastDrawerY = Top;
+            }
+            _settingsService.Save();
+        }
+
         private void ResetSizeButton_Click(object sender, RoutedEventArgs e)
         {
             var wa = ScreenHelper.GetWorkArea(this);
@@ -521,7 +635,10 @@ namespace DeskSeek.Views
 
             _settingsService.Current.DrawerWidth = defaultWidth;
             _settingsService.Current.DrawerHeight = defaultHeight;
+            _settingsService.Current.LastDrawerX = -1;
+            _settingsService.Current.LastDrawerY = -1;
             _settingsService.Save();
+            WebSnapshotImage.Source = null;
         }
 
         private void OpenDataDirButton_Click(object sender, RoutedEventArgs e)
@@ -544,11 +661,13 @@ namespace DeskSeek.Views
             var grip = sender as FrameworkElement;
             if (grip?.FindName("LeftResizeBar") is Border leftBar)
             {
-                leftBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.85, TimeSpan.FromMilliseconds(150)));
+                leftBar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                leftBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(150)));
             }
             if (grip?.FindName("RightResizeBar") is Border rightBar)
             {
-                rightBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.85, TimeSpan.FromMilliseconds(150)));
+                rightBar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                rightBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(150)));
             }
         }
 
@@ -558,11 +677,34 @@ namespace DeskSeek.Views
             var grip = sender as FrameworkElement;
             if (grip?.FindName("LeftResizeBar") is Border leftBar)
             {
-                leftBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.0, TimeSpan.FromMilliseconds(150)));
+                leftBar.Background = new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
+                leftBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.5, TimeSpan.FromMilliseconds(150)));
             }
             if (grip?.FindName("RightResizeBar") is Border rightBar)
             {
-                rightBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.0, TimeSpan.FromMilliseconds(150)));
+                rightBar.Background = new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
+                rightBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.5, TimeSpan.FromMilliseconds(150)));
+            }
+        }
+
+        private void BottomResizeGrip_MouseEnter(object sender, MouseEventArgs e)
+        {
+            var grip = sender as FrameworkElement;
+            if (grip?.FindName("BottomResizeBar") is Border bottomBar)
+            {
+                bottomBar.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                bottomBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(150)));
+            }
+        }
+
+        private void BottomResizeGrip_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (_isResizingHeight) return;
+            var grip = sender as FrameworkElement;
+            if (grip?.FindName("BottomResizeBar") is Border bottomBar)
+            {
+                bottomBar.Background = new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
+                bottomBar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.6, TimeSpan.FromMilliseconds(150)));
             }
         }
 
@@ -570,9 +712,11 @@ namespace DeskSeek.Views
         {
             _isResizingWidth = true;
             var grip = (Border)sender;
+            _isResizingFromLeft = (grip == LeftResizeGrip);
             grip.CaptureMouse();
             _resizeStartMouseScreen = PointToScreen(e.GetPosition(this));
             _resizeStartWidth = Width;
+            _resizeStartLeft = Left;
         }
 
         private void ResizeGrip_MouseMove(object sender, MouseEventArgs e)
@@ -584,17 +728,34 @@ namespace DeskSeek.Views
             var wa = ScreenHelper.GetWorkArea(this);
             double maxAllowedWidth = Math.Min(1400, wa.Width * 0.85);
 
-            if (_isDockedToRight)
+            if (_isResizingFromLeft)
             {
-                // Dragging left increases width
+                // Dragging left border:
+                // Moving mouse left (deltaX < 0) -> width increases, Left decreases
+                // The right edge of the window stays fixed at (_resizeStartLeft + _resizeStartWidth)
+                double rightEdge = _resizeStartLeft + _resizeStartWidth;
                 double newWidth = Math.Clamp(_resizeStartWidth - deltaX, 340, maxAllowedWidth);
+                double newLeft = rightEdge - newWidth;
+
+                if (newLeft < wa.Left)
+                {
+                    newLeft = wa.Left;
+                    newWidth = rightEdge - newLeft;
+                }
+
                 Width = newWidth;
-                Left = wa.Right - newWidth + 4;
+                Left = newLeft;
             }
             else
             {
-                // Dragging right increases width
+                // Dragging right border:
+                // Moving mouse right (deltaX > 0) -> width increases, Left stays fixed
                 double newWidth = Math.Clamp(_resizeStartWidth + deltaX, 340, maxAllowedWidth);
+                if (_resizeStartLeft + newWidth > wa.Right)
+                {
+                    newWidth = wa.Right - _resizeStartLeft;
+                }
+
                 Width = newWidth;
             }
 
@@ -607,6 +768,7 @@ namespace DeskSeek.Views
             {
                 _isResizingWidth = false;
                 ((Border)sender).ReleaseMouseCapture();
+                UpdateSavedPosition();
                 _settingsService.Save();
 
                 ResizeGrip_MouseLeave(sender, e);
@@ -640,7 +802,10 @@ namespace DeskSeek.Views
             {
                 _isResizingHeight = false;
                 ((Border)sender).ReleaseMouseCapture();
+                UpdateSavedPosition();
                 _settingsService.Save();
+
+                BottomResizeGrip_MouseLeave(sender, e);
             }
         }
 
@@ -726,9 +891,25 @@ namespace DeskSeek.Views
                 try
                 {
                     DragMove();
+                    UpdateSavedPosition();
                 }
                 catch { }
             }
+        }
+
+        private void UpdateSavedPosition()
+        {
+            if (_isOpening || _isClosing) return;
+
+            if (_settingsService.Current.RememberX)
+            {
+                _settingsService.Current.LastDrawerX = Left;
+            }
+            if (_settingsService.Current.RememberY)
+            {
+                _settingsService.Current.LastDrawerY = Top;
+            }
+            _settingsService.Save();
         }
     }
 }

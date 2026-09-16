@@ -57,7 +57,7 @@
                     <RowDefinition Height="50"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="20"/>
                 </Grid.RowDefinitions>
 
                 <!-- Header Bar -->
@@ -163,7 +163,13 @@
 
                 <!-- Content Area: WebView2 Host Area (Row 2 stops above Row 3 to protect bottom corners) -->
                 <Border Grid.Row="2" Background="#FFFFFF">
-                    <wv2:WebView2 x:Name="WebBrowser"/>
+                    <Grid>
+                        <wv2:WebView2 x:Name="WebBrowser"/>
+                        <Image x:Name="WebSnapshotImage"
+                               Stretch="Fill"
+                               Visibility="Collapsed"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Grid>
                 </Border>
 
                 <!-- Bottom Corner Shield: Guarantees bottom rounded corners are never occluded by WebView2 HWND -->
@@ -247,7 +253,32 @@
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Section 2: 快捷键与唤醒 -->
+                                <!-- Section 2: 主界面位置记忆 -->
+                                <TextBlock Text="主界面位置记忆" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <!-- Remember X -->
+                                        <Grid Margin="0,4">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="记住 X 轴位置 (横向)" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                <TextBlock Text="唤出时还原上次水平停靠位置（取消则自动靠紧屏幕边缘）" FontSize="11" Foreground="#94A3B8"/>
+                                            </StackPanel>
+                                            <CheckBox x:Name="SettingRememberX" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberX_Click"/>
+                                        </Grid>
+                                        <Separator Background="#F1F5F9" Margin="0,8"/>
+
+                                        <!-- Remember Y -->
+                                        <Grid Margin="0,4">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="记住 Y 轴位置 (纵向)" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                <TextBlock Text="唤出时还原上次垂直拖动高度（取消则默认靠顶居齐）" FontSize="11" Foreground="#94A3B8"/>
+                                            </StackPanel>
+                                            <CheckBox x:Name="SettingRememberY" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberY_Click"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Section 3: 快捷键与唤醒 -->
                                 <TextBlock Text="快捷键与唤醒" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
                                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                                     <Grid Margin="0,4">
@@ -426,10 +457,10 @@
                     </Grid>
                 </Border>
 
-                <!-- Left Resize Grip (Active when docked to Right) -->
+                <!-- Left Resize Grip (Active when docked to Right, 18px wide hit-test area) -->
                 <Border x:Name="LeftResizeGrip"
                         Grid.RowSpan="4"
-                        Width="8"
+                        Width="18"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
                         Background="Transparent"
@@ -440,18 +471,18 @@
                         MouseLeftButtonUp="ResizeGrip_MouseLeftButtonUp"
                         MouseMove="ResizeGrip_MouseMove">
                     <Border x:Name="LeftResizeBar"
-                            Width="3" Height="36"
-                            CornerRadius="1.5"
-                            Background="#3B82F6"
-                            Opacity="0"
+                            Width="4" Height="48"
+                            CornerRadius="2"
+                            Background="#CBD5E1"
+                            Opacity="0.5"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"/>
                 </Border>
 
-                <!-- Right Resize Grip (Active when docked to Left) -->
+                <!-- Right Resize Grip (Active when docked to Left, 18px wide hit-test area) -->
                 <Border x:Name="RightResizeGrip"
                         Grid.RowSpan="4"
-                        Width="8"
+                        Width="18"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Stretch"
                         Background="Transparent"
@@ -463,25 +494,35 @@
                         MouseLeftButtonUp="ResizeGrip_MouseLeftButtonUp"
                         MouseMove="ResizeGrip_MouseMove">
                     <Border x:Name="RightResizeBar"
-                            Width="3" Height="36"
-                            CornerRadius="1.5"
-                            Background="#3B82F6"
-                            Opacity="0"
+                            Width="4" Height="48"
+                            CornerRadius="2"
+                            Background="#CBD5E1"
+                            Opacity="0.5"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"/>
                 </Border>
 
-                <!-- Bottom Resize Grip (for height adjustment) -->
+                <!-- Bottom Resize Grip (Entire 20px bottom row hit-test area with pill handle) -->
                 <Border x:Name="BottomResizeGrip"
                         Grid.Row="3"
-                        Height="10"
+                        Height="20"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Bottom"
+                        VerticalAlignment="Stretch"
                         Background="Transparent"
                         Cursor="SizeNS"
+                        MouseEnter="BottomResizeGrip_MouseEnter"
+                        MouseLeave="BottomResizeGrip_MouseLeave"
                         MouseLeftButtonDown="BottomResizeGrip_MouseLeftButtonDown"
                         MouseLeftButtonUp="BottomResizeGrip_MouseLeftButtonUp"
-                        MouseMove="BottomResizeGrip_MouseMove"/>
+                        MouseMove="BottomResizeGrip_MouseMove">
+                    <Border x:Name="BottomResizeBar"
+                            Width="52" Height="4"
+                            CornerRadius="2"
+                            Background="#CBD5E1"
+                            Opacity="0.6"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                </Border>
             </Grid>
         </Border>
     </Grid>
