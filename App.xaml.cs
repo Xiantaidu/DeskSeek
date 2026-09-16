@@ -67,6 +67,12 @@ namespace DeskSeek
                 _drawerWindow.ToggleDrawer(_ballWindow.IsCurrentlyOnRightSide());
             };
 
+            _ballWindow.SettingsRequested += () =>
+            {
+                _drawerWindow.ShowDrawer(_ballWindow.IsCurrentlyOnRightSide());
+                _drawerWindow.OpenSettings();
+            };
+
             _drawerWindow.DrawerToggled += (isOpen) =>
             {
                 _ballWindow.NotifyDrawerStateChanged(isOpen);
@@ -94,11 +100,42 @@ namespace DeskSeek
 
         public static App? Instance => Current as App;
 
-        public void ReloadHotkey(string newHotkey)
+        public bool ReloadHotkey(string newHotkey)
         {
             if (_hotkeyService != null && _ballWindow != null)
             {
-                _hotkeyService.RegisterByString(_ballWindow, newHotkey);
+                bool success = _hotkeyService.RegisterByString(_ballWindow, newHotkey);
+                UpdateTrayTooltip();
+                return success;
+            }
+            return false;
+        }
+
+        public void UpdateTrayTooltip()
+        {
+            if (_trayIcon == null) return;
+            string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
+            if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
+            {
+                _trayIcon.Text = "DeskSeek - DeepSeek 桌面轻量吸附窗 (未设置快捷键)";
+            }
+            else
+            {
+                _trayIcon.Text = $"DeskSeek - DeepSeek 桌面轻量吸附窗 ({hk})";
+            }
+        }
+
+        public void SetPinMode(DrawerPinMode mode)
+        {
+            if (_drawerWindow != null)
+            {
+                _drawerWindow.SetPinMode(mode);
+            }
+            else if (_settingsService != null)
+            {
+                _settingsService.Current.PinMode = mode;
+                _settingsService.Current.IsPinned = (mode != DrawerPinMode.AutoHide);
+                _settingsService.Save();
             }
         }
 
@@ -106,10 +143,10 @@ namespace DeskSeek
         {
             _trayIcon = new NotifyIcon
             {
-                Text = "DeskSeek - DeepSeek 桌面轻量吸附窗 (Alt+D)",
                 Visible = true,
                 Icon = GenerateAppIcon()
             };
+            UpdateTrayTooltip();
 
             var contextMenu = new ContextMenuStrip();
 
@@ -144,33 +181,32 @@ namespace DeskSeek
             };
             contextMenu.Items.Add(autoStartItem);
 
-            // Pin state toggle
-            var pinItem = new ToolStripMenuItem("固定常驻 (不自动隐藏)")
-            {
-                Checked = _settingsService?.Current.IsPinned ?? false,
-                CheckOnClick = true
-            };
-            pinItem.Click += (s, e) =>
-            {
-                if (_settingsService != null)
-                {
-                    _settingsService.Current.IsPinned = pinItem.Checked;
-                    _settingsService.Save();
-                }
-            };
-            contextMenu.Items.Add(pinItem);
+            // Pin modes
+            var pinTopmostItem = new ToolStripMenuItem("常驻且置顶", null, (s, e) => SetPinMode(DrawerPinMode.PinnedTopmost));
+            var pinNormalItem = new ToolStripMenuItem("常驻但不置顶", null, (s, e) => SetPinMode(DrawerPinMode.PinnedNormal));
+            var pinAutoHideItem = new ToolStripMenuItem("失焦自动收起", null, (s, e) => SetPinMode(DrawerPinMode.AutoHide));
+
+            contextMenu.Items.Add(pinTopmostItem);
+            contextMenu.Items.Add(pinNormalItem);
+            contextMenu.Items.Add(pinAutoHideItem);
 
             contextMenu.Items.Add(new ToolStripSeparator());
+
+            // Settings
+            var settingsItem = new ToolStripMenuItem("偏好设置...", null, (s, e) =>
+            {
+                if (_ballWindow != null && _drawerWindow != null)
+                {
+                    _drawerWindow.ShowDrawer(_ballWindow.IsCurrentlyOnRightSide());
+                    _drawerWindow.OpenSettings();
+                }
+            });
+            contextMenu.Items.Add(settingsItem);
 
             // Reset ball position
             var resetItem = new ToolStripMenuItem("重置悬浮球位置", null, (s, e) =>
             {
-                if (_ballWindow != null && _settingsService != null)
-                {
-                    _settingsService.Current.BallTop = 200;
-                    _settingsService.Current.IsDockedToRight = true;
-                    _ballWindow.ExpandFromEdge(instant: true);
-                }
+                _ballWindow?.ResetBallPosition();
             });
             contextMenu.Items.Add(resetItem);
 
@@ -193,6 +229,25 @@ namespace DeskSeek
                 ExitApp();
             });
             contextMenu.Items.Add(exitItem);
+
+            contextMenu.Opening += (s, e) =>
+            {
+                string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
+                if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
+                {
+                    toggleItem.Text = "显示 / 隐藏";
+                }
+                else
+                {
+                    toggleItem.Text = $"显示 / 隐藏 ({hk})";
+                }
+
+                autoStartItem.Checked = AutoStartService.IsAutoStartEnabled();
+                var currentMode = _drawerWindow?.PinMode ?? _settingsService?.Current.PinMode ?? DrawerPinMode.AutoHide;
+                pinTopmostItem.Checked = (currentMode == DrawerPinMode.PinnedTopmost);
+                pinNormalItem.Checked = (currentMode == DrawerPinMode.PinnedNormal);
+                pinAutoHideItem.Checked = (currentMode == DrawerPinMode.AutoHide);
+            };
 
             _trayIcon.ContextMenuStrip = contextMenu;
 
@@ -236,7 +291,7 @@ namespace DeskSeek
             }
         }
 
-        private void ExitApp()
+        public void ExitApp()
         {
             _trayIcon?.Dispose();
             _trayIcon = null;

@@ -1,0 +1,258 @@
+<UserControl x:Class="DeskSeek.Views.Controls.SettingsOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F8FAFC">
+
+    <UserControl.Resources>
+        <Style x:Key="HeaderBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#15000000"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#25000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="46"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Settings Header Bar -->
+        <Border Grid.Row="0" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <Grid Margin="12,0">
+                <Button x:Name="BackFromSettingsButton"
+                        HorizontalAlignment="Left"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        ToolTip="返回对话"
+                        Click="BackFromSettingsButton_Click">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="←" FontSize="14" FontWeight="Bold" Foreground="#0052D9" VerticalAlignment="Center"/>
+                        <TextBlock Text=" 返回对话" FontSize="13" FontWeight="SemiBold" Foreground="#0052D9" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Button>
+
+                <TextBlock Text="偏好设置"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           Foreground="#0F172A"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Settings Body -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="16,12">
+            <StackPanel>
+                <!-- Section 1: 基础与窗口 -->
+                <TextBlock Text="基础与窗口" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <StackPanel>
+                        <!-- Auto Start -->
+                        <Grid Margin="0,4">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="开机自启" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="系统开机后自动常驻系统托盘" FontSize="11" Foreground="#94A3B8"/>
+                            </StackPanel>
+                            <CheckBox x:Name="SettingAutoStart" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoStart_Click"/>
+                        </Grid>
+                        <Separator Background="#F1F5F9" Margin="0,8"/>
+
+                        <!-- Auto Collapse -->
+                        <Grid Margin="0,4">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="贴边闲置半隐藏" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="悬浮球靠边闲置 2.5 秒后自动缩为极细边缘条" FontSize="11" Foreground="#94A3B8"/>
+                            </StackPanel>
+                            <CheckBox x:Name="SettingAutoCollapse" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoCollapse_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 2: 主界面位置记忆 -->
+                <TextBlock Text="主界面位置记忆" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <StackPanel>
+                        <!-- Remember X -->
+                        <Grid Margin="0,4">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="记住 X 轴位置 (横向)" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="唤出时还原上次水平停靠位置（取消则自动靠紧屏幕边缘）" FontSize="11" Foreground="#94A3B8"/>
+                            </StackPanel>
+                            <CheckBox x:Name="SettingRememberX" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberX_Click"/>
+                        </Grid>
+                        <Separator Background="#F1F5F9" Margin="0,8"/>
+
+                        <!-- Remember Y -->
+                        <Grid Margin="0,4">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="记住 Y 轴位置 (纵向)" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="唤出时还原上次垂直拖动高度（取消则默认靠顶居齐）" FontSize="11" Foreground="#94A3B8"/>
+                            </StackPanel>
+                            <CheckBox x:Name="SettingRememberY" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberY_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 3: 快捷键与唤醒 -->
+                <TextBlock Text="快捷键与唤醒" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <Grid Margin="0,2">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="全局唤醒热键" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                <TextBlock Text="点击右侧录制框后在键盘直接按下快捷键" FontSize="11" Foreground="#94A3B8"/>
+                            </StackPanel>
+
+                            <!-- Hotkey Recorder and Clear Buttons -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <!-- Click to Record Hotkey Box -->
+                                <Border x:Name="HotkeyRecordBorder"
+                                        Background="#F8FAFC"
+                                        BorderBrush="#CBD5E1"
+                                        BorderThickness="1.2"
+                                        CornerRadius="6"
+                                        Padding="8,5"
+                                        Cursor="Hand"
+                                        Focusable="True"
+                                        ToolTip="点击后在键盘按下想要设置的任意组合键，按 Esc 取消"
+                                        MouseLeftButtonDown="HotkeyRecordBorder_MouseLeftButtonDown"
+                                        KeyDown="HotkeyRecordBorder_KeyDown"
+                                        LostFocus="HotkeyRecordBorder_LostFocus">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock x:Name="HotkeyRecordIcon" Text="⌨️" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock x:Name="HotkeyDisplayText"
+                                                   Text="Alt+D"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#0052D9"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Clear / Set to None Button -->
+                                <Button x:Name="ClearHotkeyButton"
+                                        Margin="6,0,0,0"
+                                        Padding="6,4"
+                                        Height="28"
+                                        Background="#F1F5F9"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        ToolTip="关闭全局快捷键"
+                                        Click="ClearHotkeyButton_Click">
+                                    <TextBlock Text="设为无" FontSize="11" Foreground="#64748B"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Quick Preset Chips -->
+                        <WrapPanel Margin="0,10,0,2">
+                            <TextBlock Text="常用预设：" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Alt+D">
+                                <TextBlock Text="Alt+D" FontSize="11" Foreground="#475569"/>
+                            </Button>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Alt+Space">
+                                <TextBlock Text="Alt+Space" FontSize="11" Foreground="#475569"/>
+                            </Button>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Ctrl+Alt+D">
+                                <TextBlock Text="Ctrl+Alt+D" FontSize="11" Foreground="#475569"/>
+                            </Button>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Ctrl+Shift+D">
+                                <TextBlock Text="Ctrl+Shift+D" FontSize="11" Foreground="#475569"/>
+                            </Button>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="F9">
+                                <TextBlock Text="F9" FontSize="11" Foreground="#475569"/>
+                            </Button>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="无">
+                                <TextBlock Text="无 (禁用)" FontSize="11" Foreground="#94A3B8"/>
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- Status Tip -->
+                        <TextBlock x:Name="HotkeyStatusTip"
+                                   FontSize="11"
+                                   Foreground="#10B981"
+                                   Margin="2,4,0,0"
+                                   Visibility="Collapsed"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 4: 性能与内存优化 -->
+                <TextBlock Text="性能与内存优化" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <Grid Margin="0,4">
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+                            <TextBlock Text="后台休眠省内存" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="抽屉收起后自动挂起内核释放内存与 CPU" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <CheckBox x:Name="SettingSuspend" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingSuspend_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Section 5: 尺寸与重置 -->
+                <TextBlock Text="尺寸与排版" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <Grid Margin="0,4">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="重置侧边栏尺寸" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="恢复默认宽度 460px 及屏幕可用高度" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button Content="重置尺寸"
+                                Padding="12,5"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="#F1F5F9"
+                                BorderBrush="#CBD5E1"
+                                Cursor="Hand"
+                                Click="ResetSizeButton_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Section 6: 数据与存储 -->
+                <TextBlock Text="数据与存储" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <Grid Margin="0,4">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="本地配置与数据目录" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                            <TextBlock Text="保存登录 Cookie 及 JSON 配置文件" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button Content="打开目录"
+                                Padding="12,5"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="#F1F5F9"
+                                BorderBrush="#CBD5E1"
+                                Cursor="Hand"
+                                Click="OpenDataDirButton_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Section 7: 关于 -->
+                <Border Background="Transparent" Padding="4,10" HorizontalAlignment="Center">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="DeskSeek v1.1.0" FontSize="12" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
+                        <TextBlock Text="极简轻量 · 官方直连 · 原生体验" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

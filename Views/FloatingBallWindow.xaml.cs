@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -7,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DeskSeek.Helpers;
+using DeskSeek.Models;
 using DeskSeek.Services;
 using Point = System.Windows.Point;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -15,26 +17,6 @@ namespace DeskSeek.Views
 {
     public partial class FloatingBallWindow : Window
     {
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct RECT
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
-
-        private const int GWL_EXSTYLE = -20;
-        private const int WS_EX_NOACTIVATE = 0x08000000;
 
         private readonly SettingsService _settingsService;
         private readonly DispatcherTimer _collapseTimer;
@@ -47,6 +29,7 @@ namespace DeskSeek.Views
         private DateTime _lastClickTime = DateTime.MinValue;
 
         public event Action? BallClicked;
+        public event Action? SettingsRequested;
         public bool IsDrawerOpen { get; set; }
 
         public bool IsDockedToRight => IsCurrentlyOnRightSide();
@@ -74,9 +57,7 @@ namespace DeskSeek.Views
             // Configure window as non-activating so clicking the ball does not steal focus
             var helper = new WindowInteropHelper(this);
             WindowHandle = helper.Handle;
-
-            int exStyle = GetWindowLong(WindowHandle, GWL_EXSTYLE);
-            SetWindowLong(WindowHandle, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
+            NativeMethods.SetNoActivate(WindowHandle);
         }
 
         private void FloatingBallWindow_Loaded(object sender, RoutedEventArgs e)
@@ -107,11 +88,8 @@ namespace DeskSeek.Views
 
         public bool IsCurrentlyOnRightSide()
         {
-            if (WindowHandle != IntPtr.Zero && GetWindowRect(WindowHandle, out RECT rect))
+            if (NativeMethods.TryGetWindowDipPosition(WindowHandle, this, out double dipLeft, out _))
             {
-                var dpi = VisualTreeHelper.GetDpi(this);
-                double scaleX = dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0;
-                double dipLeft = rect.Left / scaleX;
                 var wa = ScreenHelper.GetWorkArea(this);
                 double ballCenter = dipLeft + (ActualWidth > 0 ? ActualWidth : 52) / 2;
                 double screenCenter = wa.Left + wa.Width / 2;
@@ -137,10 +115,21 @@ namespace DeskSeek.Views
             var story = (Storyboard)Resources["OnMouseLeaveStory"];
             story.Begin();
 
-            if (!IsDrawerOpen)
+            if (!IsDrawerOpen && (BallContextMenu == null || !BallContextMenu.IsOpen))
             {
                 _collapseTimer.Stop();
                 _collapseTimer.Start();
+            }
+        }
+
+        private void Window_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _isPotentialClick = false;
+            _collapseTimer.Stop();
+
+            if (_isCollapsed)
+            {
+                ExpandFromEdge(instant: true);
             }
         }
 
@@ -197,14 +186,10 @@ namespace DeskSeek.Views
             double dipLeft = Left;
             double dipTop = Top;
 
-            if (WindowHandle != IntPtr.Zero && GetWindowRect(WindowHandle, out RECT rect))
+            if (NativeMethods.TryGetWindowDipPosition(WindowHandle, this, out double nativeLeft, out double nativeTop))
             {
-                var dpi = VisualTreeHelper.GetDpi(this);
-                double scaleX = dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0;
-                double scaleY = dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0;
-                dipLeft = rect.Left / scaleX;
-                dipTop = rect.Top / scaleY;
-
+                dipLeft = nativeLeft;
+                dipTop = nativeTop;
                 Left = dipLeft;
                 Top = dipTop;
             }
@@ -358,6 +343,112 @@ namespace DeskSeek.Views
                     _collapseTimer.Start();
                 }
             }
+        }
+
+        public void ResetBallPosition()
+        {
+            var wa = ScreenHelper.GetWorkArea(this);
+            _isDockedToRight = true;
+            double targetTop = wa.Top + 200;
+            double targetLeft = wa.Right - ActualWidth;
+
+            Top = targetTop;
+            Left = targetLeft;
+
+            if (_settingsService != null)
+            {
+                _settingsService.Current.BallTop = targetTop;
+                _settingsService.Current.BallLeft = targetLeft;
+                _settingsService.Current.IsDockedToRight = true;
+                _settingsService.Save();
+            }
+
+            ExpandFromEdge(instant: true);
+        }
+
+        private void BallContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            _collapseTimer.Stop();
+
+            string hk = _settingsService?.Current.Hotkey ?? "Alt+D";
+            if (string.IsNullOrWhiteSpace(hk) || hk == "无" || hk.Equals("None", StringComparison.OrdinalIgnoreCase))
+            {
+                MenuToggleItem.Header = "显示 / 隐藏";
+            }
+            else
+            {
+                MenuToggleItem.Header = $"显示 / 隐藏 ({hk})";
+            }
+
+            MenuAutoStartItem.IsChecked = AutoStartService.IsAutoStartEnabled();
+            var currentMode = _settingsService?.Current.PinMode ?? DrawerPinMode.AutoHide;
+            MenuPinTopmostItem.IsChecked = (currentMode == DrawerPinMode.PinnedTopmost);
+            MenuPinNormalItem.IsChecked = (currentMode == DrawerPinMode.PinnedNormal);
+            MenuPinAutoHideItem.IsChecked = (currentMode == DrawerPinMode.AutoHide);
+        }
+
+        private void BallContextMenu_Closed(object sender, RoutedEventArgs e)
+        {
+            if (!IsDrawerOpen && !IsMouseOver)
+            {
+                _collapseTimer.Stop();
+                _collapseTimer.Start();
+            }
+        }
+
+        private void MenuToggle_Click(object sender, RoutedEventArgs e)
+        {
+            BallClicked?.Invoke();
+        }
+
+        private void MenuAutoStart_Click(object sender, RoutedEventArgs e)
+        {
+            bool isChecked = MenuAutoStartItem.IsChecked;
+            AutoStartService.SetAutoStart(isChecked);
+            if (_settingsService != null)
+            {
+                _settingsService.Current.AutoStart = isChecked;
+                _settingsService.Save();
+            }
+        }
+
+        private void MenuPinTopmost_Click(object sender, RoutedEventArgs e)
+        {
+            App.Instance?.SetPinMode(DrawerPinMode.PinnedTopmost);
+        }
+
+        private void MenuPinNormal_Click(object sender, RoutedEventArgs e)
+        {
+            App.Instance?.SetPinMode(DrawerPinMode.PinnedNormal);
+        }
+
+        private void MenuPinAutoHide_Click(object sender, RoutedEventArgs e)
+        {
+            App.Instance?.SetPinMode(DrawerPinMode.AutoHide);
+        }
+
+        private void MenuSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsRequested?.Invoke();
+        }
+
+        private void MenuResetBall_Click(object sender, RoutedEventArgs e)
+        {
+            ResetBallPosition();
+        }
+
+        private void MenuOpenBrowser_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("https://chat.deepseek.com") { UseShellExecute = true });
+            }
+            catch { }
+        }
+
+        private void MenuExit_Click(object sender, RoutedEventArgs e)
+        {
+            App.Instance?.ExitApp();
         }
     }
 }

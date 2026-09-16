@@ -13,7 +13,8 @@
         MouseLeave="Window_MouseLeave"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         MouseLeftButtonUp="Window_MouseLeftButtonUp"
-        MouseMove="Window_MouseMove">
+        MouseMove="Window_MouseMove"
+        PreviewMouseRightButtonDown="Window_PreviewMouseRightButtonDown">
 
     <Window.Resources>
         <!-- Fluid spring scale transformation for hover effect -->
@@ -49,7 +50,143 @@
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
+
+        <!-- Modern Windows 11 ContextMenu Styling -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="MinWidth" Value="180"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="16" Color="#000000" Opacity="0.12" ShadowDepth="4" Direction="270"/>
+                            </Border.Effect>
+                            <StackPanel IsItemsHost="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Separator">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Margin" Value="4,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Height="1" Background="#F1F5F9" Margin="4,3"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="ItemBorder"
+                                CornerRadius="6"
+                                Background="Transparent"
+                                Padding="10,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="CheckMark"
+                                           Grid.Column="0"
+                                           Text="✓"
+                                           FontWeight="Bold"
+                                           FontSize="13"
+                                           Foreground="#0052D9"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed"/>
+                                <ContentPresenter Grid.Column="1"
+                                                  ContentSource="Header"
+                                                  VerticalAlignment="Center"
+                                                  Margin="4,0,8,0"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#F1F5F9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
+
+    <Window.ContextMenu>
+        <ContextMenu x:Name="BallContextMenu"
+                     Opened="BallContextMenu_Opened"
+                     Closed="BallContextMenu_Closed">
+            <MenuItem x:Name="MenuToggleItem"
+                      Header="显示 / 隐藏"
+                      FontWeight="SemiBold"
+                      Click="MenuToggle_Click"/>
+
+            <Separator/>
+
+            <MenuItem x:Name="MenuAutoStartItem"
+                      Header="开机自启"
+                      IsCheckable="True"
+                      Click="MenuAutoStart_Click"/>
+
+            <MenuItem x:Name="MenuPinTopmostItem"
+                      Header="常驻且置顶"
+                      IsCheckable="True"
+                      Click="MenuPinTopmost_Click"/>
+
+            <MenuItem x:Name="MenuPinNormalItem"
+                      Header="常驻但不置顶"
+                      IsCheckable="True"
+                      Click="MenuPinNormal_Click"/>
+
+            <MenuItem x:Name="MenuPinAutoHideItem"
+                      Header="失焦自动收起"
+                      IsCheckable="True"
+                      Click="MenuPinAutoHide_Click"/>
+
+            <Separator/>
+
+            <MenuItem x:Name="MenuSettingsItem"
+                      Header="偏好设置..."
+                      Click="MenuSettings_Click"/>
+
+            <MenuItem x:Name="MenuResetBallItem"
+                      Header="重置悬浮球位置"
+                      Click="MenuResetBall_Click"/>
+
+            <MenuItem x:Name="MenuOpenBrowserItem"
+                      Header="在浏览器中打开 DeepSeek"
+                      Click="MenuOpenBrowser_Click"/>
+
+            <Separator/>
+
+            <MenuItem x:Name="MenuExitItem"
+                      Header="退出 DeskSeek"
+                      Foreground="#DC2626"
+                      Click="MenuExit_Click"/>
+        </ContextMenu>
+    </Window.ContextMenu>
 
     <Grid x:Name="RootGrid" Width="64" Height="64">
         <!-- Outer glow / drop shadow -->

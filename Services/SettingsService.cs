@@ -31,6 +31,11 @@ namespace DeskSeek.Services
                     if (loaded != null)
                     {
                         Current = loaded;
+                        // Migration: If previously IsPinned is true but PinMode is default AutoHide, migrate to PinnedTopmost
+                        if (Current.IsPinned && Current.PinMode == DrawerPinMode.AutoHide)
+                        {
+                            Current.PinMode = DrawerPinMode.PinnedTopmost;
+                        }
                         return;
                     }
                 }
