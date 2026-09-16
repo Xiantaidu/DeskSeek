@@ -1,0 +1,394 @@
+<Window x:Class="DeskSeek.Views.DrawerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="DeskSeek"
+        Width="460" Height="800"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Deactivated="Window_Deactivated">
+
+    <Window.Resources>
+        <!-- Modern control button style -->
+        <Style x:Key="HeaderBtnStyle" TargetType="Button">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#15000000"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#25000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Main Container with Shadow and Rounded Corner -->
+    <Grid Margin="12">
+        <Border x:Name="MainCard"
+                CornerRadius="16"
+                Background="#FFFFFF"
+                BorderBrush="#E2E8F0"
+                BorderThickness="1"
+                RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="CardTranslate" X="0" Y="0"/>
+            </Border.RenderTransform>
+
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" BlurRadius="28" Opacity="0.20" ShadowDepth="4" Direction="270"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header Bar -->
+                <Border Grid.Row="0"
+                        Background="#F8FAFC"
+                        CornerRadius="16,16,0,0"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="0,0,0,1">
+                    <Grid Margin="14,0,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Logo & Brand Title -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Mini whale logo -->
+                            <Border Width="26" Height="26" CornerRadius="13" Background="#0052D9" Margin="0,0,8,0">
+                                <Viewbox Width="16" Height="16">
+                                    <Canvas Width="1024" Height="1024">
+                                        <Path Fill="White" Data="M875 510 C830 380, 710 300, 560 290 C420 280, 290 350, 210 440 C170 485, 130 535, 90 570 C80 580, 70 595, 80 610 C90 625, 110 625, 125 620 C190 595, 250 560, 315 540 C340 532, 375 540, 395 555 C460 600, 545 625, 630 620 C730 615, 820 560, 875 510 Z"/>
+                                        <Ellipse Fill="#0052D9" Width="42" Height="42" Canvas.Left="640" Canvas.Top="420"/>
+                                        <Ellipse Fill="White" Width="14" Height="14" Canvas.Left="650" Canvas.Top="426"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Border>
+                            <TextBlock Text="DeskSeek"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="#0F172A"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Draggable center handle -->
+                        <Grid Grid.Column="1" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown"/>
+
+                        <!-- Action Toolbar -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Pin Toggle Button -->
+                            <Button x:Name="PinButton"
+                                    Style="{StaticResource HeaderBtnStyle}"
+                                    ToolTip="固定窗口 (Pin)"
+                                    Click="PinButton_Click"
+                                    Margin="2,0">
+                                <TextBlock x:Name="PinIcon" Text="📌" FontSize="14" Foreground="#64748B"/>
+                            </Button>
+
+                            <!-- Zoom Presets Button -->
+                            <Button x:Name="ZoomButton"
+                                    Style="{StaticResource HeaderBtnStyle}"
+                                    ToolTip="缩放比例 (点击切换 100% / 90% / 80%)"
+                                    Click="ZoomButton_Click"
+                                    Margin="2,0">
+                                <TextBlock x:Name="ZoomText" Text="90%" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                            </Button>
+
+                            <!-- Refresh Button -->
+                            <Button Style="{StaticResource HeaderBtnStyle}"
+                                    ToolTip="刷新页面 (Refresh)"
+                                    Click="RefreshButton_Click"
+                                    Margin="2,0">
+                                <TextBlock Text="🔄" FontSize="13" Foreground="#64748B"/>
+                            </Button>
+
+                            <!-- External Browser Button -->
+                            <Button Style="{StaticResource HeaderBtnStyle}"
+                                    ToolTip="在外部浏览器打开"
+                                    Click="ExternalBrowserButton_Click"
+                                    Margin="2,0">
+                                <TextBlock Text="🌐" FontSize="13" Foreground="#64748B"/>
+                            </Button>
+
+                            <!-- Settings Button -->
+                            <Button x:Name="SettingsButton"
+                                    Style="{StaticResource HeaderBtnStyle}"
+                                    ToolTip="偏好设置"
+                                    Click="SettingsButton_Click"
+                                    Margin="2,0">
+                                <TextBlock Text="⚙️" FontSize="14" Foreground="#64748B"/>
+                            </Button>
+
+                            <!-- Close / Collapse Button -->
+                            <Button Style="{StaticResource HeaderBtnStyle}"
+                                    ToolTip="收起侧边栏"
+                                    Click="CloseButton_Click"
+                                    Margin="2,0">
+                                <TextBlock Text="✕" FontSize="14" FontWeight="Bold" Foreground="#64748B"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Loading progress indicator -->
+                <ProgressBar x:Name="LoadingBar"
+                             Grid.Row="1"
+                             Height="2.5"
+                             IsIndeterminate="True"
+                             Background="#F1F5F9"
+                             Foreground="#0052D9"
+                             BorderThickness="0"
+                             Visibility="Visible"/>
+
+                <!-- Content Area: WebView2 + Settings Overlay -->
+                <Grid Grid.Row="2">
+                    <!-- WebView2 Browser Host Area -->
+                    <Border Background="#FFFFFF"
+                            CornerRadius="0,0,16,16"
+                            ClipToBounds="True">
+                        <wv2:WebView2 x:Name="WebBrowser"/>
+                    </Border>
+
+                    <!-- Settings Flyout Overlay -->
+                    <Border x:Name="SettingsOverlay"
+                            Background="#F8FAFC"
+                            CornerRadius="0,0,16,16"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="46"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Settings Header Bar -->
+                            <Border Grid.Row="0" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                                <Grid Margin="12,0">
+                                    <Button x:Name="BackFromSettingsButton"
+                                            HorizontalAlignment="Left"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            ToolTip="返回对话"
+                                            Click="BackFromSettingsButton_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="←" FontSize="14" FontWeight="Bold" Foreground="#0052D9" VerticalAlignment="Center"/>
+                                            <TextBlock Text=" 返回对话" FontSize="13" FontWeight="SemiBold" Foreground="#0052D9" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <TextBlock Text="偏好设置"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="#0F172A"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Settings Body -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="16,12">
+                                <StackPanel>
+                                    <!-- Section 1: 基础与窗口 -->
+                                    <TextBlock Text="基础与窗口" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                                    <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <!-- Auto Start -->
+                                            <Grid Margin="0,4">
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="开机自启" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                    <TextBlock Text="系统开机后自动常驻系统托盘" FontSize="11" Foreground="#94A3B8"/>
+                                                </StackPanel>
+                                                <CheckBox x:Name="SettingAutoStart" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoStart_Click"/>
+                                            </Grid>
+                                            <Separator Background="#F1F5F9" Margin="0,8"/>
+
+                                            <!-- Pin Mode -->
+                                            <Grid Margin="0,4">
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="默认固定常驻" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                    <TextBlock Text="点击其他窗口失焦时不自动收起" FontSize="11" Foreground="#94A3B8"/>
+                                                </StackPanel>
+                                                <CheckBox x:Name="SettingPin" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingPin_Click"/>
+                                            </Grid>
+                                            <Separator Background="#F1F5F9" Margin="0,8"/>
+
+                                            <!-- Auto Collapse -->
+                                            <Grid Margin="0,4">
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="贴边闲置半隐藏" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                    <TextBlock Text="悬浮球靠边闲置 2.5 秒后自动缩为极细边缘条" FontSize="11" Foreground="#94A3B8"/>
+                                                </StackPanel>
+                                                <CheckBox x:Name="SettingAutoCollapse" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoCollapse_Click"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Section 2: 快捷键与唤醒 -->
+                                    <TextBlock Text="快捷键与唤醒" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                                    <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                                        <Grid Margin="0,4">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="全局唤醒热键" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                <TextBlock Text="在任意应用前随时呼出/隐藏" FontSize="11" Foreground="#94A3B8"/>
+                                            </StackPanel>
+                                            <ComboBox x:Name="SettingHotkeyCombo"
+                                                      HorizontalAlignment="Right"
+                                                      VerticalAlignment="Center"
+                                                      Width="110"
+                                                      Height="28"
+                                                      SelectionChanged="SettingHotkeyCombo_SelectionChanged">
+                                                <ComboBoxItem Content="Alt+D"/>
+                                                <ComboBoxItem Content="Alt+Space"/>
+                                                <ComboBoxItem Content="Ctrl+Alt+D"/>
+                                                <ComboBoxItem Content="Ctrl+Shift+D"/>
+                                            </ComboBox>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Section 3: 性能与内存优化 -->
+                                    <TextBlock Text="性能与内存优化" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                                    <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                                        <Grid Margin="0,4">
+                                            <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+                                                <TextBlock Text="后台休眠省内存" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                <TextBlock Text="抽屉收起后自动挂起内核释放内存与 CPU" FontSize="11" Foreground="#94A3B8"/>
+                                            </StackPanel>
+                                            <CheckBox x:Name="SettingSuspend" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingSuspend_Click"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Section 4: 尺寸与重置 -->
+                                    <TextBlock Text="尺寸与排版" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                                    <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                                        <Grid Margin="0,4">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="重置侧边栏尺寸" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                <TextBlock Text="恢复默认宽度 460px 及屏幕可用高度" FontSize="11" Foreground="#94A3B8"/>
+                                            </StackPanel>
+                                            <Button Content="重置尺寸"
+                                                    Padding="12,5"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Background="#F1F5F9"
+                                                    BorderBrush="#CBD5E1"
+                                                    Cursor="Hand"
+                                                    Click="ResetSizeButton_Click"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Section 5: 数据与存储 -->
+                                    <TextBlock Text="数据与存储" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
+                                    <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                                        <Grid Margin="0,4">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="本地配置与数据目录" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
+                                                <TextBlock Text="保存登录 Cookie 及 JSON 配置文件" FontSize="11" Foreground="#94A3B8"/>
+                                            </StackPanel>
+                                            <Button Content="打开目录"
+                                                    Padding="12,5"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Background="#F1F5F9"
+                                                    BorderBrush="#CBD5E1"
+                                                    Cursor="Hand"
+                                                    Click="OpenDataDirButton_Click"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Section 6: 关于 -->
+                                    <Border Background="Transparent" Padding="4,10" HorizontalAlignment="Center">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="DeskSeek v1.1.0" FontSize="12" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="极简轻量 · 官方直连 · 原生体验" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Left Resize Grip (Active when docked to Right) -->
+                <Border x:Name="LeftResizeGrip"
+                        Grid.RowSpan="3"
+                        Width="8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        Background="Transparent"
+                        Cursor="SizeWE"
+                        MouseEnter="ResizeGrip_MouseEnter"
+                        MouseLeave="ResizeGrip_MouseLeave"
+                        MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"
+                        MouseLeftButtonUp="ResizeGrip_MouseLeftButtonUp"
+                        MouseMove="ResizeGrip_MouseMove">
+                    <Border x:Name="LeftResizeBar"
+                            Width="3" Height="36"
+                            CornerRadius="1.5"
+                            Background="#3B82F6"
+                            Opacity="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Right Resize Grip (Active when docked to Left) -->
+                <Border x:Name="RightResizeGrip"
+                        Grid.RowSpan="3"
+                        Width="8"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Stretch"
+                        Background="Transparent"
+                        Cursor="SizeWE"
+                        Visibility="Collapsed"
+                        MouseEnter="ResizeGrip_MouseEnter"
+                        MouseLeave="ResizeGrip_MouseLeave"
+                        MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"
+                        MouseLeftButtonUp="ResizeGrip_MouseLeftButtonUp"
+                        MouseMove="ResizeGrip_MouseMove">
+                    <Border x:Name="RightResizeBar"
+                            Width="3" Height="36"
+                            CornerRadius="1.5"
+                            Background="#3B82F6"
+                            Opacity="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Bottom Resize Grip (for height adjustment) -->
+                <Border x:Name="BottomResizeGrip"
+                        Grid.Row="2"
+                        Height="8"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Bottom"
+                        Background="Transparent"
+                        Cursor="SizeNS"
+                        MouseLeftButtonDown="BottomResizeGrip_MouseLeftButtonDown"
+                        MouseLeftButtonUp="BottomResizeGrip_MouseLeftButtonUp"
+                        MouseMove="BottomResizeGrip_MouseMove"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

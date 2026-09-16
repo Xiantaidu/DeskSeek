@@ -1,0 +1,114 @@
+<Window x:Class="DeskSeek.Views.FloatingBallWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DeskSeek Ball"
+        Height="64" Width="64"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        MouseEnter="Window_MouseEnter"
+        MouseLeave="Window_MouseLeave"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        MouseLeftButtonUp="Window_MouseLeftButtonUp"
+        MouseMove="Window_MouseMove">
+
+    <Window.Resources>
+        <!-- Fluid spring scale transformation for hover effect -->
+        <Storyboard x:Key="OnMouseEnterStory">
+            <DoubleAnimation Storyboard.TargetName="BallScale"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1.10" Duration="0:0:0.26">
+                <DoubleAnimation.EasingFunction>
+                    <BackEase Amplitude="0.35" EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BallScale"
+                             Storyboard.TargetProperty="ScaleY"
+                             To="1.10" Duration="0:0:0.26">
+                <DoubleAnimation.EasingFunction>
+                    <BackEase Amplitude="0.35" EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="OnMouseLeaveStory">
+            <DoubleAnimation Storyboard.TargetName="BallScale"
+                             Storyboard.TargetProperty="ScaleX"
+                             To="1.0" Duration="0:0:0.22">
+                <DoubleAnimation.EasingFunction>
+                    <QuarticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BallScale"
+                             Storyboard.TargetProperty="ScaleY"
+                             To="1.0" Duration="0:0:0.22">
+                <DoubleAnimation.EasingFunction>
+                    <QuarticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid" Width="64" Height="64">
+        <!-- Outer glow / drop shadow -->
+        <Border x:Name="BallContainer"
+                Width="52" Height="52"
+                CornerRadius="26"
+                Cursor="Hand"
+                RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform>
+                <ScaleTransform x:Name="BallScale" ScaleX="1" ScaleY="1"/>
+            </Border.RenderTransform>
+
+            <Border.Effect>
+                <DropShadowEffect x:Name="BallShadow"
+                                  Color="#1055E8"
+                                  BlurRadius="14"
+                                  Opacity="0.55"
+                                  Direction="270"
+                                  ShadowDepth="3"/>
+            </Border.Effect>
+
+            <!-- Gradient background -->
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#2979FF" Offset="0.0"/>
+                    <GradientStop Color="#0052D9" Offset="0.55"/>
+                    <GradientStop Color="#0035A0" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <!-- Inner border highlight -->
+            <Border CornerRadius="26" BorderBrush="#70FFFFFF" BorderThickness="1.2">
+                <Grid>
+                    <!-- DeepSeek Style Stylized Whale / AI Icon -->
+                    <Viewbox Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Canvas Width="1024" Height="1024">
+                            <!-- Stylized whale body -->
+                            <Path Fill="White" Data="M875 510 C830 380, 710 300, 560 290 C420 280, 290 350, 210 440 C170 485, 130 535, 90 570 C80 580, 70 595, 80 610 C90 625, 110 625, 125 620 C190 595, 250 560, 315 540 C340 532, 375 540, 395 555 C460 600, 545 625, 630 620 C730 615, 820 560, 875 510 Z"/>
+                            <!-- Whale tail fin -->
+                            <Path Fill="White" Opacity="0.92" Data="M200 450 C140 400, 95 330, 85 270 C82 255, 98 250, 110 260 C145 295, 180 345, 205 390 Z"/>
+                            <!-- Eye sparkle -->
+                            <Ellipse Fill="#0052D9" Width="42" Height="42" Canvas.Left="640" Canvas.Top="420"/>
+                            <Ellipse Fill="White" Width="14" Height="14" Canvas.Left="650" Canvas.Top="426"/>
+                            <!-- AI Star Sparkle -->
+                            <Path Fill="#FFD54F" Data="M780 260 L800 310 L850 330 L800 350 L780 400 L760 350 L710 330 L760 310 Z"/>
+                        </Canvas>
+                    </Viewbox>
+
+                    <!-- Edge mini tab indicator for collapsed state -->
+                    <Border x:Name="EdgeIndicator"
+                            Width="4" Height="20"
+                            CornerRadius="2"
+                            Background="#FFFFFF"
+                            Opacity="0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0"/>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</Window>
