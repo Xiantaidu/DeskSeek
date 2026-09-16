@@ -9,6 +9,9 @@ namespace DeskSeek.Helpers
     {
         public const int GWL_EXSTYLE = -20;
         public const int WS_EX_NOACTIVATE = 0x08000000;
+        public const uint GA_PARENT = 1;
+        public const uint GA_ROOT = 2;
+        public const uint GA_ROOTOWNER = 3;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -33,6 +36,9 @@ namespace DeskSeek.Helpers
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetAncestor(IntPtr hWnd, uint gaFlags);
 
         public static void SetNoActivate(IntPtr hWnd)
         {

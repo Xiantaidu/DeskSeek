@@ -254,10 +254,25 @@ namespace DeskSeek.Views
         {
             if (!IsPinned && IsOpen && !_isOpening && !_isClosing && !_windowResizer.IsResizing)
             {
+                // If user is viewing disclaimer overlay or pin menu is open, don't auto-hide
+                if (DisclaimerControl.Visibility == Visibility.Visible) return;
+                if (PinContextMenu != null && PinContextMenu.IsOpen) return;
+
                 IntPtr fg = NativeMethods.GetForegroundWindow();
+
+                // If user clicked the floating ball, let the ball click toggle handle it
                 if (_ballHwnd != IntPtr.Zero && fg == _ballHwnd)
                 {
                     return;
+                }
+
+                // If fg is DrawerWindow itself or an owned popup/child window, don't hide
+                IntPtr drawerHwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                if (drawerHwnd != IntPtr.Zero && fg != IntPtr.Zero)
+                {
+                    if (fg == drawerHwnd) return;
+                    IntPtr root = NativeMethods.GetAncestor(fg, NativeMethods.GA_ROOTOWNER);
+                    if (root == drawerHwnd) return;
                 }
 
                 HideDrawer();

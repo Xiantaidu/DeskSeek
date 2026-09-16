@@ -11,7 +11,8 @@
         Background="Transparent"
         Topmost="True"
         ShowInTaskbar="False"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Deactivated="Window_Deactivated">
 
     <Window.Resources>
         <Style x:Key="HeaderBtnStyle" TargetType="Button">
