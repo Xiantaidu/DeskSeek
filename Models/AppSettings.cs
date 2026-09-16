@@ -13,5 +13,6 @@ namespace DeskSeek.Models
         public string Hotkey { get; set; } = "Alt+D";
         public bool AutoCollapse { get; set; } = true;
         public bool SuspendWhenHidden { get; set; } = false;
+        public bool DisclaimerAccepted { get; set; } = false;
     }
 }

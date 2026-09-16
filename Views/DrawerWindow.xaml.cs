@@ -15,6 +15,7 @@ using Brushes = System.Windows.Media.Brushes;
 using Point = System.Windows.Point;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Border = System.Windows.Controls.Border;
+using Cursors = System.Windows.Input.Cursors;
 
 namespace DeskSeek.Views
 {
@@ -39,6 +40,10 @@ namespace DeskSeek.Views
         private double _resizeStartWidth;
         private double _resizeStartHeight;
 
+        // First-launch disclaimer state
+        private System.Windows.Threading.DispatcherTimer? _disclaimerTimer;
+        private int _disclaimerCountdown = 3;
+
         public event Action<bool>? DrawerToggled;
         public bool IsOpen => Visibility == Visibility.Visible && !_isClosing;
 
@@ -53,7 +58,14 @@ namespace DeskSeek.Views
             UpdatePinUi();
             UpdateZoomUi();
 
-            Loaded += (s, e) => _ = PreloadAsync();
+            Loaded += (s, e) =>
+            {
+                _ = PreloadAsync();
+                if (!_settingsService.Current.DisclaimerAccepted)
+                {
+                    ShowDisclaimerOverlay();
+                }
+            };
         }
 
         public async System.Threading.Tasks.Task PreloadAsync()
@@ -192,13 +204,21 @@ namespace DeskSeek.Views
 
             try
             {
+                if (!_settingsService.Current.DisclaimerAccepted)
+                {
+                    ShowDisclaimerOverlay();
+                }
+
                 Show();
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     try
                     {
                         Activate();
-                        WebBrowser.Focus();
+                        if (_settingsService.Current.DisclaimerAccepted)
+                        {
+                            WebBrowser.Focus();
+                        }
                     }
                     catch { }
                 }), System.Windows.Threading.DispatcherPriority.Background);
@@ -303,6 +323,9 @@ namespace DeskSeek.Views
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!_settingsService.Current.DisclaimerAccepted)
+                return; // Must accept disclaimer before accessing settings
+
             if (SettingsOverlay.Visibility == Visibility.Visible)
             {
                 CloseSettings();
@@ -340,13 +363,100 @@ namespace DeskSeek.Views
         private void CloseSettings()
         {
             SettingsOverlay.Visibility = Visibility.Collapsed;
-            WebBrowser.Visibility = Visibility.Visible;
+            if (_settingsService.Current.DisclaimerAccepted)
+            {
+                WebBrowser.Visibility = Visibility.Visible;
+            }
         }
 
         private void BackFromSettingsButton_Click(object sender, RoutedEventArgs e)
         {
             CloseSettings();
         }
+
+        #endregion
+
+        #region Disclaimer Overlay Management
+
+        private void ShowDisclaimerOverlay()
+        {
+            WebBrowser.Visibility = Visibility.Collapsed;
+            SettingsOverlay.Visibility = Visibility.Collapsed;
+            DisclaimerOverlay.Visibility = Visibility.Visible;
+
+            if (_disclaimerTimer != null) return;
+
+            _disclaimerCountdown = 3;
+            DisclaimerCheckBox.IsEnabled = false;
+            DisclaimerCheckBox.IsChecked = false;
+            DisclaimerAgreeButton.IsEnabled = false;
+            DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+            DisclaimerAgreeButton.Cursor = Cursors.No;
+            DisclaimerButtonText.Text = $"请先阅读免责声明 ({_disclaimerCountdown}s)";
+
+            _disclaimerTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _disclaimerTimer.Tick += (s, e) =>
+            {
+                _disclaimerCountdown--;
+                if (_disclaimerCountdown > 0)
+                {
+                    DisclaimerButtonText.Text = $"请先阅读免责声明 ({_disclaimerCountdown}s)";
+                }
+                else
+                {
+                    _disclaimerTimer.Stop();
+                    _disclaimerTimer = null;
+                    DisclaimerCheckBox.IsEnabled = true;
+                    DisclaimerButtonText.Text = "请勾选已阅读同意";
+                }
+            };
+            _disclaimerTimer.Start();
+        }
+
+        private void DisclaimerCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            bool isChecked = DisclaimerCheckBox.IsChecked == true;
+            if (isChecked)
+            {
+                DisclaimerAgreeButton.IsEnabled = true;
+                DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                DisclaimerAgreeButton.Cursor = Cursors.Hand;
+                DisclaimerButtonText.Text = "同意并开始使用";
+            }
+            else
+            {
+                DisclaimerAgreeButton.IsEnabled = false;
+                DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+                DisclaimerAgreeButton.Cursor = Cursors.No;
+                DisclaimerButtonText.Text = _disclaimerCountdown > 0
+                    ? $"请先阅读免责声明 ({_disclaimerCountdown}s)"
+                    : "请勾选已阅读同意";
+            }
+        }
+
+        private void DisclaimerAgreeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DisclaimerCheckBox.IsChecked != true) return;
+
+            _disclaimerTimer?.Stop();
+            _disclaimerTimer = null;
+
+            _settingsService.Current.DisclaimerAccepted = true;
+            _settingsService.Save();
+
+            DisclaimerOverlay.Visibility = Visibility.Collapsed;
+            WebBrowser.Visibility = Visibility.Visible;
+            try
+            {
+                WebBrowser.Focus();
+            }
+            catch { }
+        }
+
+        #endregion
 
         private void SettingAutoStart_Click(object sender, RoutedEventArgs e)
         {
@@ -426,8 +536,6 @@ namespace DeskSeek.Views
             }
             catch { }
         }
-
-        #endregion
 
         #region Width & Height Resizing Handlers
 

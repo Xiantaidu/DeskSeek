@@ -84,6 +84,12 @@ namespace DeskSeek
 
             // Initialize Tray Icon
             InitTrayIcon();
+
+            // On first launch, automatically open the drawer so user sees the disclaimer immediately
+            if (!_settingsService.Current.DisclaimerAccepted)
+            {
+                _drawerWindow.ShowDrawer(_ballWindow.IsCurrentlyOnRightSide());
+            }
         }
 
         public static App? Instance => Current as App;
