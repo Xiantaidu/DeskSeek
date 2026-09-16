@@ -2,6 +2,8 @@ name: Build & Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -15,9 +17,20 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
-    name: Build & Release Package
+  build:
+    name: Build (${{ matrix.rid }})
     runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            arch: x64
+          - rid: win-x86
+            arch: x86
+          - rid: win-arm64
+            arch: arm64
 
     steps:
       - name: Checkout Repository
@@ -49,39 +62,82 @@ jobs:
           Write-Host "Resolved Version: $ver"
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Publish Self-Contained Application
+      - name: Publish Self-Contained Application (${{ matrix.rid }})
         shell: pwsh
         run: |
           dotnet publish DeskSeek.csproj `
             -c Release `
-            -r win-x64 `
+            -r ${{ matrix.rid }} `
             --self-contained true `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -p:EnableCompressionInSingleFile=true `
-            -o publish/self-contained
+            -o publish/${{ matrix.rid }}
 
-      - name: Package Portable ZIP
+      - name: Package Portable ZIP (${{ matrix.rid }})
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist -Force | Out-Null
-          Compress-Archive -Path "publish/self-contained/*" -DestinationPath "dist/DeskSeek-v$($env:VERSION)-Portable.zip" -Force
-          Write-Host "Portable ZIP created successfully."
+          $zipPath = "dist/DeskSeek-v$($env:VERSION)-${{ matrix.rid }}-Portable.zip"
+          Compress-Archive -Path "publish/${{ matrix.rid }}/*" -DestinationPath $zipPath -Force
+          Write-Host "Portable ZIP created: $zipPath"
 
       - name: Compile Windows Installer (Inno Setup)
         shell: pwsh
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion="$($env:VERSION)" installer/DeskSeek.iss
-          Write-Host "Inno Setup compilation finished."
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=$($env:VERSION)" `
+            "/DAppArch=${{ matrix.arch }}" `
+            "/DSourceDir=..\publish\${{ matrix.rid }}" `
+            installer/DeskSeek.iss
+          Write-Host "Inno Setup compilation finished for ${{ matrix.arch }}."
+
+      - name: Upload Build Artifacts (${{ matrix.rid }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: deskseek-${{ matrix.rid }}
+          path: dist/*
+
+  release:
+    name: Publish Release & Assets
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Resolve Release Version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $ver = $env:GITHUB_REF -replace '^refs/tags/v', ''
+          } elseif ('${{ github.event.inputs.version }}' -ne '') {
+            $ver = '${{ github.event.inputs.version }}'
+          } else {
+            $ver = '1.0.0'
+          }
+          Write-Host "Resolved Version: $ver"
+          "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
 
       - name: Generate SHA256 Checksums
         shell: pwsh
         run: |
           cd dist
-          Get-FileHash -Algorithm SHA256 * | ForEach-Object {
+          Get-FileHash -Algorithm SHA256 * | Where-Object { $_.Path -notlike '*checksums.txt' } | ForEach-Object {
             "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)"
           } | Out-File -Encoding ascii checksums.txt
+          Write-Host "Generated SHA256 checksums:"
           Get-Content checksums.txt
+
+      - name: Upload All Release Artifacts as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeskSeek-v${{ env.VERSION }}-AllPackages
+          path: dist/*
 
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
@@ -93,6 +149,4 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            dist/DeskSeek-v${{ env.VERSION }}-Setup.exe
-            dist/DeskSeek-v${{ env.VERSION }}-Portable.zip
-            dist/checksums.txt
+            dist/*
