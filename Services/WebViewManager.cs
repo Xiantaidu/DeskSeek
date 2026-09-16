@@ -172,5 +172,56 @@ namespace DeskSeek.Services
                 return null;
             }
         }
+
+        public string GetCurrentUrl()
+        {
+            try
+            {
+                string? url = _webView.CoreWebView2?.Source;
+                if (!string.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                {
+                    if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                    {
+                        return url;
+                    }
+                }
+
+                if (_webView.Source != null)
+                {
+                    string fallback = _webView.Source.ToString();
+                    if (fallback.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                        fallback.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return fallback;
+                    }
+                }
+            }
+            catch { }
+
+            return "https://chat.deepseek.com";
+        }
+
+        public async Task<string> GetCurrentUrlAsync()
+        {
+            try
+            {
+                if (_webView.CoreWebView2 != null)
+                {
+                    string jsonUrl = await _webView.CoreWebView2.ExecuteScriptAsync("window.location.href");
+                    if (!string.IsNullOrWhiteSpace(jsonUrl) && jsonUrl != "null")
+                    {
+                        string unquoted = System.Text.Json.JsonSerializer.Deserialize<string>(jsonUrl) ?? jsonUrl.Trim('"');
+                        if (Uri.TryCreate(unquoted, UriKind.Absolute, out var uri) &&
+                            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                        {
+                            return unquoted;
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            return GetCurrentUrl();
+        }
     }
 }

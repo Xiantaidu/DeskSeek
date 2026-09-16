@@ -91,7 +91,7 @@ namespace DeskSeek.Views
             if (NativeMethods.TryGetWindowDipPosition(WindowHandle, this, out double dipLeft, out _))
             {
                 var wa = ScreenHelper.GetWorkArea(this);
-                double ballCenter = dipLeft + (ActualWidth > 0 ? ActualWidth : 52) / 2;
+                double ballCenter = dipLeft + (ActualWidth > 0 ? ActualWidth : 96) / 2;
                 double screenCenter = wa.Left + wa.Width / 2;
                 return ballCenter >= screenCenter;
             }
@@ -235,7 +235,8 @@ namespace DeskSeek.Views
         private void CollapseToEdge()
         {
             var wa = ScreenHelper.GetWorkArea(this);
-            double visibleEdgeWidth = 16.0;
+            // Expose exactly half of the icon/ball when collapsed
+            double visibleEdgeWidth = (ActualWidth > 0 ? ActualWidth : 96.0) / 2.0;
 
             _isDockedToRight = IsCurrentlyOnRightSide();
 
@@ -249,14 +250,14 @@ namespace DeskSeek.Views
             {
                 EasingFunction = new CircleEase { EasingMode = EasingMode.EaseInOut }
             };
-            var animOpacity = new DoubleAnimation(Opacity, 0.60, TimeSpan.FromMilliseconds(320));
+            var animOpacity = new DoubleAnimation(Opacity, 0.85, TimeSpan.FromMilliseconds(320));
 
             animLeft.Completed += (s, ev) =>
             {
                 _isCollapsed = true;
                 _isAnimating = false;
                 Left = targetLeft;
-                Opacity = 0.60;
+                Opacity = 0.85;
             };
 
             BeginAnimation(LeftProperty, animLeft);
@@ -439,11 +440,7 @@ namespace DeskSeek.Views
 
         private void MenuOpenBrowser_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Process.Start(new ProcessStartInfo("https://chat.deepseek.com") { UseShellExecute = true });
-            }
-            catch { }
+            App.Instance?.OpenCurrentUrlInExternalBrowser();
         }
 
         private void MenuExit_Click(object sender, RoutedEventArgs e)

@@ -389,11 +389,25 @@ namespace DeskSeek.Views
 
         private void ExternalBrowserButton_Click(object sender, RoutedEventArgs e)
         {
+            OpenCurrentInExternalBrowser();
+        }
+
+        public async void OpenCurrentInExternalBrowser()
+        {
             try
             {
-                Process.Start(new ProcessStartInfo("https://chat.deepseek.com") { UseShellExecute = true });
+                string url = await _webViewManager.GetCurrentUrlAsync();
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[DeskSeek] Failed to open external browser: {ex.Message}");
+                try
+                {
+                    Process.Start(new ProcessStartInfo("https://chat.deepseek.com") { UseShellExecute = true });
+                }
+                catch { }
+            }
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

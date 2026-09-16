@@ -139,6 +139,22 @@ namespace DeskSeek
             }
         }
 
+        public void OpenCurrentUrlInExternalBrowser()
+        {
+            if (_drawerWindow != null)
+            {
+                _drawerWindow.OpenCurrentInExternalBrowser();
+            }
+            else
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo("https://chat.deepseek.com") { UseShellExecute = true });
+                }
+                catch { }
+            }
+        }
+
         private void InitTrayIcon()
         {
             _trayIcon = new NotifyIcon
@@ -211,13 +227,9 @@ namespace DeskSeek
             contextMenu.Items.Add(resetItem);
 
             // Open in browser
-            var openBrowserItem = new ToolStripMenuItem("在浏览器中打开 DeepSeek", null, (s, e) =>
+            var openBrowserItem = new ToolStripMenuItem("在浏览器中打开当前对话", null, (s, e) =>
             {
-                try
-                {
-                    Process.Start(new ProcessStartInfo("https://chat.deepseek.com") { UseShellExecute = true });
-                }
-                catch { }
+                OpenCurrentUrlInExternalBrowser();
             });
             contextMenu.Items.Add(openBrowserItem);
 
@@ -264,29 +276,35 @@ namespace DeskSeek
         {
             try
             {
-                using var bmp = new Bitmap(32, 32);
-                using var g = Graphics.FromImage(bmp);
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.Clear(Color.Transparent);
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string icoPath = Path.Combine(baseDir, "Assets", "app.ico");
+                if (File.Exists(icoPath))
+                {
+                    return new Icon(icoPath, SystemInformation.SmallIconSize);
+                }
 
-                // DeepSeek Blue rounded background
-                using var brush = new SolidBrush(Color.FromArgb(0, 82, 217));
-                g.FillEllipse(brush, 1, 1, 30, 30);
+                string pngPath = Path.Combine(baseDir, "Assets", "logo.png");
+                if (File.Exists(pngPath))
+                {
+                    using var src = System.Drawing.Image.FromFile(pngPath);
+                    int size = Math.Max(16, SystemInformation.SmallIconSize.Width);
+                    using var bmp = new Bitmap(size, size);
+                    using var g = Graphics.FromImage(bmp);
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    g.Clear(Color.Transparent);
 
-                // Stylized "D" glyph
-                using var pen = new Pen(Color.White, 3.5f);
-                pen.StartCap = LineCap.Round;
-                pen.EndCap = LineCap.Round;
+                    // Crop tightly around mascot (bounds 120,130,800,800) for crystal clarity in small tray
+                    g.DrawImage(src, new Rectangle(0, 0, size, size), 120, 130, 800, 800, GraphicsUnit.Pixel);
+                    return Icon.FromHandle(bmp.GetHicon());
+                }
 
-                // Draw sleek D-shape
-                g.DrawLine(pen, 10, 8, 10, 24);
-                g.DrawArc(pen, 8, 8, 14, 16, -90, 180);
-
-                var hIcon = bmp.GetHicon();
-                return Icon.FromHandle(hIcon);
+                return SystemIcons.Application;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[DeskSeek] Failed to load custom tray icon: {ex.Message}");
                 return SystemIcons.Application;
             }
         }
