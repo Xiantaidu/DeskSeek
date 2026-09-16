@@ -125,9 +125,12 @@ jobs:
         shell: pwsh
         run: |
           cd dist
-          Get-FileHash -Algorithm SHA256 * | Where-Object { $_.Path -notlike '*checksums.txt' } | ForEach-Object {
-            "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)"
-          } | Out-File -Encoding ascii checksums.txt
+          $files = Get-ChildItem -File | Where-Object { $_.Name -ne "checksums.txt" }
+          $lines = foreach ($f in $files) {
+            $h = (Get-FileHash -Path $f.FullName -Algorithm SHA256).Hash.ToLower()
+            "$h  $($f.Name)"
+          }
+          $lines | Set-Content -Path "checksums.txt" -Encoding ascii
           Write-Host "Generated SHA256 checksums:"
           Get-Content checksums.txt
 
@@ -147,4 +150,6 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            dist/*
+            dist/*.exe
+            dist/*.zip
+            dist/checksums.txt
