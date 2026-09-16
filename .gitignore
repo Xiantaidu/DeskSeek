@@ -5,6 +5,7 @@
 [Oo]bj/
 out/
 publish/
+dist/
 
 ## =====================================
 ## IDE & Editor Configurations
