@@ -51,6 +51,7 @@ namespace DeskSeek.Views
             SettingsControl.CloseRequested += CloseSettings;
             SettingsControl.ResetSizeRequested += ResetSidebarSize;
 
+            DisclaimerControl.Initialize(_settingsService);
             DisclaimerControl.Accepted += OnDisclaimerAccepted;
 
             _currentZoom = _settingsService.Current.WebZoom > 0 ? _settingsService.Current.WebZoom : 0.9;
@@ -525,6 +526,9 @@ namespace DeskSeek.Views
 
         private void OnDisclaimerAccepted()
         {
+            _settingsService.Current.DisclaimerAccepted = true;
+            _settingsService.Save();
+
             DisclaimerControl.Visibility = Visibility.Collapsed;
             WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Visible;

@@ -13,7 +13,7 @@ namespace DeskSeek.Views.Controls
 {
     public partial class DisclaimerOverlay : UserControl
     {
-        private readonly SettingsService? _settingsService;
+        private SettingsService? _settingsService;
         private DispatcherTimer? _disclaimerTimer;
         private int _countdown = 3;
 
@@ -23,6 +23,11 @@ namespace DeskSeek.Views.Controls
         {
             InitializeComponent();
             LocalizationService.Instance.LanguageChanged += _ => UpdateButtonText();
+        }
+
+        public void Initialize(SettingsService settingsService)
+        {
+            _settingsService = settingsService;
         }
 
         public DisclaimerOverlay(SettingsService settingsService) : this()
