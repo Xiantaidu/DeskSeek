@@ -7,9 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release Version (e.g. 1.0.0)'
+        description: 'Release Version (e.g. 1.1.0)'
         required: true
-        default: '1.0.0'
+        default: '1.1.0'
+      notes:
+        description: 'Release Notes / Changelog'
+        required: false
+        default: '修复免责声明问题'
 
 permissions:
   contents: write
@@ -68,6 +72,7 @@ jobs:
             -r ${{ matrix.rid }} `
             --self-contained false `
             -p:PublishSingleFile=true `
+            -p:Version=$($env:VERSION) `
             -o publish/${{ matrix.rid }}
 
           # Ensure Assets directory is copied for Portable ZIP
@@ -104,7 +109,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Resolve Release Version
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Release Version and Notes
         shell: pwsh
         run: |
           if ($env:GITHUB_REF -like 'refs/tags/v*') {
@@ -112,10 +122,27 @@ jobs:
           } elseif ('${{ github.event.inputs.version }}' -ne '') {
             $ver = '${{ github.event.inputs.version }}'
           } else {
-            $ver = '1.0.0'
+            $ver = '1.1.0'
           }
           Write-Host "Resolved Version: $ver"
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          $notes = ""
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $tagName = $env:GITHUB_REF -replace '^refs/tags/', ''
+            $tagContent = (git tag -l --format='%(contents)' $tagName).Trim()
+            if ($tagContent) {
+              $notes = $tagContent
+            }
+          }
+          if (-not $notes -and '${{ github.event.inputs.notes }}' -ne '') {
+            $notes = '${{ github.event.inputs.notes }}'
+          }
+          if (-not $notes) {
+            $notes = "DeskSeek v$ver"
+          }
+          Write-Host "Resolved Notes: $notes"
+          $notes | Out-File -FilePath "dist_notes.md" -Encoding utf8
 
       - name: Download All Build Artifacts
         uses: actions/download-artifact@v4
@@ -148,6 +175,7 @@ jobs:
         with:
           name: "DeskSeek v${{ env.VERSION }}"
           tag_name: ${{ github.ref_name || format('v{0}', env.VERSION) }}
+          body_path: dist_notes.md
           draft: false
           prerelease: false
           generate_release_notes: true

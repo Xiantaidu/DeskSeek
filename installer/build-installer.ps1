@@ -77,6 +77,7 @@ foreach ($target in $TargetArchs) {
         "-r", $rid,
         "--self-contained", $scStr,
         "-p:PublishSingleFile=true",
+        "-p:Version=$Version",
         "-o", $publishDir
     )
     dotnet @dotnetArgs
