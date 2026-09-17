@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
+using DeskSeek.Helpers;
 using DeskSeek.Models;
 using DeskSeek.Services;
 using DeskSeek.Views;
@@ -24,6 +25,8 @@ namespace DeskSeek
         private FloatingBallWindow? _ballWindow;
         private DrawerWindow? _drawerWindow;
 
+        private static readonly uint SummonWindowMessage = NativeMethods.RegisterWindowMessage("DeskSeek_Summon_Instance_Msg");
+
         protected override void OnStartup(StartupEventArgs e)
         {
             DispatcherUnhandledException += (s, args) =>
@@ -41,13 +44,8 @@ namespace DeskSeek
             _instanceMutex = new Mutex(true, MutexName, out bool createdNew);
             if (!createdNew)
             {
-                var tempSettings = new SettingsService();
-                LocalizationService.Instance.Initialize(tempSettings.Current.Language);
-                System.Windows.MessageBox.Show(
-                    LocalizationService.Instance.GetString("Lang_SingleInstanceMsg"),
-                    LocalizationService.Instance.GetString("Lang_SingleInstanceTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                // Wake up and summon existing instance to screen
+                NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, SummonWindowMessage, IntPtr.Zero, IntPtr.Zero);
                 Shutdown();
                 return;
             }
@@ -62,7 +60,20 @@ namespace DeskSeek
             _drawerWindow = new DrawerWindow(_settingsService);
             _ = _drawerWindow.PreloadAsync();
 
-            _drawerWindow.SetBallWindowHandle(new System.Windows.Interop.WindowInteropHelper(_ballWindow).EnsureHandle());
+            IntPtr ballHwnd = new System.Windows.Interop.WindowInteropHelper(_ballWindow).EnsureHandle();
+            _drawerWindow.SetBallWindowHandle(ballHwnd);
+
+            // Listen for second-instance wake up message
+            var hwndSource = System.Windows.Interop.HwndSource.FromHwnd(ballHwnd);
+            hwndSource?.AddHook((IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
+            {
+                if ((uint)msg == SummonWindowMessage)
+                {
+                    _drawerWindow?.ShowDrawer(_ballWindow.IsCurrentlyOnRightSide());
+                    handled = true;
+                }
+                return IntPtr.Zero;
+            });
 
             // Wire up event interactions
             _ballWindow.BallClicked += () =>
@@ -317,6 +328,22 @@ namespace DeskSeek
         {
             try
             {
+                // 1. Try loading directly from embedded WPF Pack URI resource
+                var icoUri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+                var streamInfo = System.Windows.Application.GetResourceStream(icoUri);
+                if (streamInfo?.Stream != null)
+                {
+                    using (streamInfo.Stream)
+                    {
+                        return new Icon(streamInfo.Stream, SystemInformation.SmallIconSize);
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                // 2. Fallback to physical file if exists
                 string baseDir = AppDomain.CurrentDomain.BaseDirectory;
                 string icoPath = Path.Combine(baseDir, "Assets", "app.ico");
                 if (File.Exists(icoPath))
@@ -324,30 +351,32 @@ namespace DeskSeek
                     return new Icon(icoPath, SystemInformation.SmallIconSize);
                 }
 
-                string pngPath = Path.Combine(baseDir, "Assets", "logo.png");
-                if (File.Exists(pngPath))
+                // 3. Fallback to embedded logo.png
+                var pngUri = new Uri("pack://application:,,,/Assets/logo.png", UriKind.Absolute);
+                var pngStream = System.Windows.Application.GetResourceStream(pngUri);
+                if (pngStream?.Stream != null)
                 {
-                    using var src = System.Drawing.Image.FromFile(pngPath);
-                    int size = Math.Max(16, SystemInformation.SmallIconSize.Width);
-                    using var bmp = new Bitmap(size, size);
-                    using var g = Graphics.FromImage(bmp);
-                    g.SmoothingMode = SmoothingMode.HighQuality;
-                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                    g.Clear(Color.Transparent);
-
-                    // Crop tightly around mascot (bounds 120,130,800,800) for crystal clarity in small tray
-                    g.DrawImage(src, new Rectangle(0, 0, size, size), 120, 130, 800, 800, GraphicsUnit.Pixel);
-                    return Icon.FromHandle(bmp.GetHicon());
+                    using (pngStream.Stream)
+                    using (var src = System.Drawing.Image.FromStream(pngStream.Stream))
+                    {
+                        int size = Math.Max(16, SystemInformation.SmallIconSize.Width);
+                        using var bmp = new Bitmap(size, size);
+                        using var g = Graphics.FromImage(bmp);
+                        g.SmoothingMode = SmoothingMode.HighQuality;
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        g.Clear(Color.Transparent);
+                        g.DrawImage(src, new Rectangle(0, 0, size, size), 120, 130, 800, 800, GraphicsUnit.Pixel);
+                        return Icon.FromHandle(bmp.GetHicon());
+                    }
                 }
-
-                return SystemIcons.Application;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[DeskSeek] Failed to load custom tray icon: {ex.Message}");
-                return SystemIcons.Application;
             }
+
+            return SystemIcons.Application;
         }
 
         public void ExitApp()

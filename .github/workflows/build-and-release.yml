@@ -60,17 +60,19 @@ jobs:
           Write-Host "Resolved Version: $ver"
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Publish Self-Contained Application (${{ matrix.rid }})
+      - name: Publish Application (${{ matrix.rid }})
         shell: pwsh
         run: |
           dotnet publish DeskSeek.csproj `
             -c Release `
             -r ${{ matrix.rid }} `
-            --self-contained true `
+            --self-contained false `
             -p:PublishSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:EnableCompressionInSingleFile=true `
             -o publish/${{ matrix.rid }}
+
+          # Ensure Assets directory is copied for Portable ZIP
+          New-Item -ItemType Directory -Path "publish/${{ matrix.rid }}/Assets" -Force | Out-Null
+          Copy-Item -Path "Assets/*" -Destination "publish/${{ matrix.rid }}/Assets" -Recurse -Force
 
       - name: Package Portable ZIP (${{ matrix.rid }})
         shell: pwsh

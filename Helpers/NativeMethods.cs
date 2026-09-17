@@ -40,6 +40,15 @@ namespace DeskSeek.Helpers
         [DllImport("user32.dll")]
         public static extern IntPtr GetAncestor(IntPtr hWnd, uint gaFlags);
 
+        public const int HWND_BROADCAST = 0xffff;
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern uint RegisterWindowMessage(string lpString);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
         public static void SetNoActivate(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) return;

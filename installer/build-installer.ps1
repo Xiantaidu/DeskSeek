@@ -10,7 +10,8 @@
 param(
     [string]$Version = "1.0.0",
     [ValidateSet("x64", "x86", "arm64", "all")]
-    [string]$Arch = "x64"
+    [string]$Arch = "x64",
+    [switch]$SelfContained = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,10 +21,12 @@ $DistDir = Join-Path $ProjectRoot "dist"
 $IssScript = Join-Path $ProjectRoot "installer\DeskSeek.iss"
 
 $TargetArchs = if ($Arch -eq "all") { @("x64", "x86", "arm64") } else { @($Arch) }
+$scStr = if ($SelfContained) { "true" } else { "false" }
 
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host "   DeskSeek 打包程序构建工具 v$Version   " -ForegroundColor Cyan
 Write-Host "   目标架构: $($TargetArchs -join ', ')  " -ForegroundColor Cyan
+Write-Host "   自包含模式: $scStr                   " -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 
 # 1. 准备目标输出目录
@@ -64,18 +67,16 @@ foreach ($target in $TargetArchs) {
     Write-Host ">>> 开始构建架构: $target (RID: $rid) ..." -ForegroundColor Cyan
     Write-Host "-----------------------------------------" -ForegroundColor DarkCyan
 
-    # A. 编译发布自包含单文件版
-    Write-Host "[1/3] 正在执行 dotnet publish ($rid)..." -ForegroundColor Yellow
+    # A. 编译发布单文件版
+    Write-Host "[1/3] 正在执行 dotnet publish ($rid, self-contained: $scStr)..." -ForegroundColor Yellow
     $projectPath = Join-Path $ProjectRoot "DeskSeek.csproj"
     $dotnetArgs = @(
         "publish",
         $projectPath,
         "-c", "Release",
         "-r", $rid,
-        "--self-contained", "true",
+        "--self-contained", $scStr,
         "-p:PublishSingleFile=true",
-        "-p:IncludeNativeLibrariesForSelfExtract=true",
-        "-p:EnableCompressionInSingleFile=true",
         "-o", $publishDir
     )
     dotnet @dotnetArgs
@@ -84,6 +85,11 @@ foreach ($target in $TargetArchs) {
         Write-Error "架构 $target 的 dotnet publish 编译失败！"
         exit 1
     }
+
+    # 复制 Assets 资源到发布目录以确保 Portable 解压版包含图标
+    $assetsDest = Join-Path $publishDir "Assets"
+    New-Item -ItemType Directory -Path $assetsDest -Force | Out-Null
+    Copy-Item -Path (Join-Path $ProjectRoot "Assets\*") -Destination $assetsDest -Recurse -Force
 
     # B. 打包便携版 ZIP (Portable)
     Write-Host "[2/3] 正在打包便携版 ZIP (Portable)..." -ForegroundColor Yellow
