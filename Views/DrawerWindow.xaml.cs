@@ -42,10 +42,6 @@ namespace DeskSeek.Views
 
             _webViewManager = new WebViewManager(WebBrowser, LoadingBar);
             _windowResizer = new WindowResizer(this, _settingsService, LeftResizeGrip, RightResizeGrip, BottomResizeGrip);
-            _windowResizer.ResizeCompleted += () =>
-            {
-                WebSnapshotImage.Source = null;
-            };
 
             SettingsControl.Initialize(_settingsService);
             SettingsControl.CloseRequested += CloseSettings;
@@ -104,7 +100,6 @@ namespace DeskSeek.Views
 
             var margin = _isDockedToRight ? new Thickness(8, 0, 0, 0) : new Thickness(0, 0, 8, 0);
             WebBrowser.Margin = margin;
-            WebSnapshotImage.Margin = margin;
 
             double targetWidth = _settingsService.Current.DrawerWidth > 320
                 ? _settingsService.Current.DrawerWidth
@@ -136,7 +131,6 @@ namespace DeskSeek.Views
                 RightResizeGrip.Visibility = _isDockedToRight ? Visibility.Collapsed : Visibility.Visible;
                 var dynamicMargin = _isDockedToRight ? new Thickness(8, 0, 0, 0) : new Thickness(0, 0, 8, 0);
                 WebBrowser.Margin = dynamicMargin;
-                WebSnapshotImage.Margin = dynamicMargin;
             }
             else
             {
@@ -149,20 +143,9 @@ namespace DeskSeek.Views
 
             _webViewManager.Resume();
 
-            bool useSnapshot = (WebSnapshotImage.Source != null &&
-                                SettingsControl.Visibility != Visibility.Visible &&
-                                DisclaimerControl.Visibility != Visibility.Visible &&
-                                _settingsService.Current.DisclaimerAccepted);
-
-            if (useSnapshot)
-            {
-                WebSnapshotImage.Visibility = Visibility.Visible;
-                WebBrowser.Visibility = Visibility.Hidden;
-            }
-            else if (_settingsService.Current.DisclaimerAccepted && SettingsControl.Visibility != Visibility.Visible)
+            if (_settingsService.Current.DisclaimerAccepted && SettingsControl.Visibility != Visibility.Visible)
             {
                 WebBrowser.Visibility = Visibility.Visible;
-                WebSnapshotImage.Visibility = Visibility.Collapsed;
             }
 
             try
@@ -179,7 +162,7 @@ namespace DeskSeek.Views
                     try
                     {
                         Activate();
-                        if (_settingsService.Current.DisclaimerAccepted && !useSnapshot)
+                        if (_settingsService.Current.DisclaimerAccepted && SettingsControl.Visibility != Visibility.Visible)
                         {
                             WebBrowser.Focus();
                         }
@@ -194,63 +177,25 @@ namespace DeskSeek.Views
 
             CardTranslate.BeginAnimation(TranslateTransform.XProperty, null);
             CardTranslate.X = 0;
-            MainCard.Opacity = 0.0;
-
-            var animFade = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(180))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
-            animFade.Completed += (s, e) =>
-            {
-                MainCard.BeginAnimation(UIElement.OpacityProperty, null);
-                MainCard.Opacity = 1.0;
-                _isOpening = false;
-                DrawerToggled?.Invoke(true);
-
-                if (_settingsService.Current.DisclaimerAccepted && SettingsControl.Visibility != Visibility.Visible)
-                {
-                    WebBrowser.Visibility = Visibility.Visible;
-                    WebSnapshotImage.Visibility = Visibility.Collapsed;
-                    try { WebBrowser.Focus(); } catch { }
-                }
-            };
-
-            MainCard.BeginAnimation(UIElement.OpacityProperty, animFade);
+            MainCard.BeginAnimation(UIElement.OpacityProperty, null);
+            MainCard.Opacity = 1.0;
+            _isOpening = false;
+            DrawerToggled?.Invoke(true);
         }
 
-        public async void HideDrawer()
+        public void HideDrawer()
         {
             if (!IsOpen || _isClosing) return;
 
             _isClosing = true;
             _isOpening = false;
 
-            if (_settingsService.Current.DisclaimerAccepted && SettingsControl.Visibility != Visibility.Visible)
-            {
-                var snapshot = await _webViewManager.CaptureSnapshotAsync();
-                if (snapshot != null)
-                {
-                    WebSnapshotImage.Source = snapshot;
-                    WebSnapshotImage.Visibility = Visibility.Visible;
-                    WebBrowser.Visibility = Visibility.Hidden;
-                }
-            }
+            MainCard.BeginAnimation(UIElement.OpacityProperty, null);
+            Hide();
+            _isClosing = false;
+            DrawerToggled?.Invoke(false);
 
-            var animFade = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(160))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
-            };
-
-            animFade.Completed += async (s, e) =>
-            {
-                Hide();
-                _isClosing = false;
-                DrawerToggled?.Invoke(false);
-
-                await _webViewManager.TrySuspendAsync();
-            };
-
-            MainCard.BeginAnimation(UIElement.OpacityProperty, animFade);
+            _ = _webViewManager.TrySuspendAsync();
         }
 
         private void Window_Deactivated(object? sender, EventArgs e)
@@ -481,7 +426,6 @@ namespace DeskSeek.Views
         public void OpenSettings()
         {
             SettingsControl.ReloadSettings();
-            WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Collapsed;
             SettingsControl.Visibility = Visibility.Visible;
         }
@@ -491,8 +435,8 @@ namespace DeskSeek.Views
             SettingsControl.Visibility = Visibility.Collapsed;
             if (_settingsService.Current.DisclaimerAccepted)
             {
-                WebSnapshotImage.Visibility = Visibility.Collapsed;
                 WebBrowser.Visibility = Visibility.Visible;
+                try { WebBrowser.Focus(); } catch { }
             }
         }
 
@@ -512,12 +456,10 @@ namespace DeskSeek.Views
             _settingsService.Current.LastDrawerX = -1;
             _settingsService.Current.LastDrawerY = -1;
             _settingsService.Save();
-            WebSnapshotImage.Source = null;
         }
 
         private void ShowDisclaimer()
         {
-            WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Collapsed;
             SettingsControl.Visibility = Visibility.Collapsed;
             DisclaimerControl.Visibility = Visibility.Visible;
@@ -530,7 +472,6 @@ namespace DeskSeek.Views
             _settingsService.Save();
 
             DisclaimerControl.Visibility = Visibility.Collapsed;
-            WebSnapshotImage.Visibility = Visibility.Collapsed;
             WebBrowser.Visibility = Visibility.Visible;
             try { WebBrowser.Focus(); } catch { }
         }

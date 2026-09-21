@@ -197,16 +197,9 @@
 
                 <!-- Live WebView2 Browser Host -->
                 <wv2:WebView2 x:Name="WebBrowser"
+                              DefaultBackgroundColor="Transparent"
                               Grid.Row="2"
                               Margin="8,0,0,0"/>
-
-                <!-- Snapshot Image (Used during fade in/out animations to guarantee 100% lockstep frame sync) -->
-                <Image x:Name="WebSnapshotImage"
-                       Grid.Row="2"
-                       Margin="8,0,0,0"
-                       Stretch="Fill"
-                       RenderOptions.BitmapScalingMode="HighQuality"
-                       Visibility="Collapsed"/>
 
                 <!-- Bottom Footer Area -->
                 <Border Grid.Row="3"

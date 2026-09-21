@@ -48,7 +48,7 @@ namespace DeskSeek.Services
                 await _webView.EnsureCoreWebView2Async(env);
 
                 _isInitialized = true;
-                _webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(248, 250, 252);
+                _webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
                 _webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 _webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
 
@@ -145,31 +145,6 @@ namespace DeskSeek.Services
                     await _webView.CoreWebView2.TrySuspendAsync();
                 }
                 catch { }
-            }
-        }
-
-        public async Task<BitmapImage?> CaptureSnapshotAsync()
-        {
-            if (_webView.CoreWebView2 == null || _webView.Visibility != Visibility.Visible)
-                return null;
-
-            try
-            {
-                using var stream = new MemoryStream();
-                await _webView.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, stream);
-                stream.Position = 0;
-
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.StreamSource = stream;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                return bitmap;
-            }
-            catch
-            {
-                return null;
             }
         }
 
