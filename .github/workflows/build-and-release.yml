@@ -2,18 +2,20 @@ name: Build & Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release Version (e.g. 1.1.0)'
+        description: 'Release Version (e.g. 1.2.0)'
         required: true
-        default: '1.1.0'
+        default: '1.2.0'
       notes:
         description: 'Release Notes / Changelog'
         required: false
-        default: '修复免责声明问题'
+        default: '支持 Windows 系统明暗主题与自定义强调色自适应，修复白屏闪烁问题'
 
 permissions:
   contents: write
@@ -59,7 +61,7 @@ jobs:
           } elseif ('${{ github.event.inputs.version }}' -ne '') {
             $ver = '${{ github.event.inputs.version }}'
           } else {
-            $ver = '1.0.0'
+            $ver = '1.2.0'
           }
           Write-Host "Resolved Version: $ver"
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -122,7 +124,7 @@ jobs:
           } elseif ('${{ github.event.inputs.version }}' -ne '') {
             $ver = '${{ github.event.inputs.version }}'
           } else {
-            $ver = '1.1.0'
+            $ver = '1.2.0'
           }
           Write-Host "Resolved Version: $ver"
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append

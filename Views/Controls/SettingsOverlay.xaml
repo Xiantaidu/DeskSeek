@@ -420,7 +420,7 @@
                 <!-- Section 8: 关于 -->
                 <Border Background="Transparent" Padding="4,10" HorizontalAlignment="Center">
                     <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="DeskSeek v1.1.0" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Theme_TextSecondary}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="DeskSeek v1.2.0" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Theme_TextSecondary}" HorizontalAlignment="Center"/>
                         <TextBlock Text="{DynamicResource Lang_AboutSlogan}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
