@@ -9,6 +9,8 @@ using DeskSeek.Helpers;
 using DeskSeek.Models;
 using DeskSeek.Services;
 using Color = System.Windows.Media.Color;
+using Brush = System.Windows.Media.Brush;
+using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Cursors = System.Windows.Input.Cursors;
 using Point = System.Windows.Point;
@@ -55,6 +57,7 @@ namespace DeskSeek.Views
             UpdateZoomUi();
 
             LocalizationService.Instance.LanguageChanged += (lang) => UpdatePinUi();
+            ThemeService.Instance.ThemeChanged += (isDark, accent) => UpdatePinUi();
 
             Loaded += (s, e) =>
             {
@@ -290,22 +293,30 @@ namespace DeskSeek.Views
 
         private void UpdatePinUi()
         {
+            var accentBrush = Application.Current?.Resources["Theme_AccentBrush"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+            var accentHoverBrush = Application.Current?.Resources["Theme_AccentHoverBrush"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
+            var textSecondary = Application.Current?.Resources["Theme_TextSecondary"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+            var textMuted = Application.Current?.Resources["Theme_TextMuted"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+            var isDark = ThemeService.Instance.IsDark;
+
             switch (_pinMode)
             {
                 case DrawerPinMode.PinnedTopmost:
-                    PinButton.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                    PinButton.Background = accentBrush;
                     PinIcon.Foreground = Brushes.White;
                     PinBadge.Visibility = Visibility.Visible;
-                    PinBadge.Background = new SolidColorBrush(Color.FromRgb(0x25, 0x63, 0xEB));
+                    PinBadge.Background = accentHoverBrush;
                     PinBadgeText.Text = LocalizationService.Instance.GetString("Lang_PinTopmostBadge");
                     PinButton.ToolTip = LocalizationService.Instance.GetString("Lang_PinTopmostTip");
                     break;
 
                 case DrawerPinMode.PinnedNormal:
-                    PinButton.Background = new SolidColorBrush(Color.FromRgb(0xDB, 0xEA, 0xFE));
-                    PinIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                    PinButton.Background = isDark
+                        ? new SolidColorBrush(Color.FromArgb(0x40, ThemeService.Instance.CurrentAccentColor.R, ThemeService.Instance.CurrentAccentColor.G, ThemeService.Instance.CurrentAccentColor.B))
+                        : new SolidColorBrush(Color.FromRgb(0xDB, 0xEA, 0xFE));
+                    PinIcon.Foreground = accentBrush;
                     PinBadge.Visibility = Visibility.Visible;
-                    PinBadge.Background = new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+                    PinBadge.Background = textMuted;
                     PinBadgeText.Text = LocalizationService.Instance.GetString("Lang_PinNormalBadge");
                     PinButton.ToolTip = LocalizationService.Instance.GetString("Lang_PinNormalTip");
                     break;
@@ -313,7 +324,7 @@ namespace DeskSeek.Views
                 case DrawerPinMode.AutoHide:
                 default:
                     PinButton.Background = Brushes.Transparent;
-                    PinIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+                    PinIcon.Foreground = textSecondary;
                     PinBadge.Visibility = Visibility.Collapsed;
                     PinButton.ToolTip = LocalizationService.Instance.GetString("Lang_PinAutoHideTip");
                     break;

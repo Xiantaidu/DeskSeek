@@ -52,10 +52,10 @@
             </DoubleAnimation>
         </Storyboard>
 
-        <!-- Modern Windows 11 ContextMenu Styling -->
+        <!-- Modern Windows 11 ContextMenu Styling with Dynamic Theme -->
         <Style TargetType="ContextMenu">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="Background" Value="{DynamicResource Theme_ContextMenuBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Theme_ContextMenuBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="4"/>
             <Setter Property="MinWidth" Value="180"/>
@@ -68,7 +68,7 @@
                                 CornerRadius="10"
                                 Padding="{TemplateBinding Padding}">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="16" Color="#000000" Opacity="0.12" ShadowDepth="4" Direction="270"/>
+                                <DropShadowEffect BlurRadius="16" Color="#000000" Opacity="0.2" ShadowDepth="4" Direction="270"/>
                             </Border.Effect>
                             <StackPanel IsItemsHost="True"/>
                         </Border>
@@ -79,12 +79,12 @@
 
         <Style TargetType="Separator">
             <Setter Property="Height" Value="1"/>
-            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Background" Value="{DynamicResource Theme_ContextMenuSeparator}"/>
             <Setter Property="Margin" Value="4,4"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Separator">
-                        <Border Height="1" Background="#F1F5F9" Margin="4,3"/>
+                        <Border Height="1" Background="{DynamicResource Theme_ContextMenuSeparator}" Margin="4,3"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -92,7 +92,7 @@
 
         <Style TargetType="MenuItem">
             <Setter Property="Height" Value="32"/>
-            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="{DynamicResource Theme_ContextMenuText}"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -112,7 +112,7 @@
                                            Text="✓"
                                            FontWeight="Bold"
                                            FontSize="13"
-                                           Foreground="#0052D9"
+                                           Foreground="{DynamicResource Theme_AccentBrush}"
                                            VerticalAlignment="Center"
                                            Visibility="Collapsed"/>
                                 <ContentPresenter Grid.Column="1"
@@ -126,7 +126,7 @@
                                 <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
                             </Trigger>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#F1F5F9"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource Theme_ContextMenuHover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -211,9 +211,9 @@
                        SnapsToDevicePixels="True">
                     <Image.Effect>
                         <DropShadowEffect x:Name="BallShadow"
-                                          Color="#0A3C96"
-                                          BlurRadius="12"
-                                          Opacity="0.45"
+                                          Color="{DynamicResource Theme_AccentGlowColor}"
+                                          BlurRadius="14"
+                                          Opacity="0.55"
                                           Direction="270"
                                           ShadowDepth="3"/>
                     </Image.Effect>

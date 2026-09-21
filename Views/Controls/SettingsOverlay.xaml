@@ -1,7 +1,7 @@
 <UserControl x:Class="DeskSeek.Views.Controls.SettingsOverlay"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="#F8FAFC">
+             Background="{DynamicResource Theme_OverlayBackground}">
 
     <UserControl.Resources>
         <Style x:Key="HeaderBtnStyle" TargetType="Button">
@@ -16,10 +16,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#E2E8F0"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme_ButtonHover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#CBD5E1"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Theme_ButtonPressed}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -35,7 +35,7 @@
         </Grid.RowDefinitions>
 
         <!-- Settings Header Bar -->
-        <Border Grid.Row="0" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="{DynamicResource Theme_HeaderBackground}" BorderBrush="{DynamicResource Theme_HeaderBorder}" BorderThickness="0,0,0,1">
             <Grid Margin="12,0">
                 <Button x:Name="BackFromSettingsButton"
                         HorizontalAlignment="Left"
@@ -45,15 +45,15 @@
                         ToolTip="{DynamicResource Lang_BackToChat}"
                         Click="BackFromSettingsButton_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="←" FontSize="14" FontWeight="Bold" Foreground="#0052D9" VerticalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Lang_BackToChat}" FontSize="13" FontWeight="SemiBold" Foreground="#0052D9" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                        <TextBlock Text="←" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource Theme_AccentBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource Lang_BackToChat}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource Theme_AccentBrush}" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     </StackPanel>
                 </Button>
 
                 <TextBlock Text="{DynamicResource Lang_SettingsTitle}"
                            FontSize="14"
                            FontWeight="Bold"
-                           Foreground="#0F172A"
+                           Foreground="{DynamicResource Theme_TextPrimary}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"/>
             </Grid>
@@ -63,23 +63,23 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="16,12">
             <StackPanel>
                 <!-- Section 0: 界面语言 / Language -->
-                <TextBlock Text="{DynamicResource Lang_SecLanguage}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                <TextBlock Text="{DynamicResource Lang_SecLanguage}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,2">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Lang_LanguageTitle}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="{DynamicResource Lang_LanguageDesc}" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_LanguageTitle}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                            <TextBlock Text="{DynamicResource Lang_LanguageDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                         </StackPanel>
 
                         <!-- Segmented language switch buttons -->
                         <Border HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Background="#F1F5F9" CornerRadius="8" Padding="3">
+                                Background="{DynamicResource Theme_SegmentBackground}" CornerRadius="8" Padding="3">
                             <StackPanel Orientation="Horizontal">
                                 <Button x:Name="LangZhButton"
                                         Content="简体中文"
                                         FontSize="11.5" FontWeight="SemiBold"
                                         Padding="12,5"
-                                        Background="#0052D9"
+                                        Background="{DynamicResource Theme_AccentBrush}"
                                         Foreground="White"
                                         BorderThickness="0"
                                         Cursor="Hand"
@@ -95,7 +95,7 @@
                                         FontSize="11.5" FontWeight="SemiBold"
                                         Padding="12,5"
                                         Background="Transparent"
-                                        Foreground="#64748B"
+                                        Foreground="{DynamicResource Theme_TextSecondary}"
                                         BorderThickness="0"
                                         Cursor="Hand"
                                         Click="LangEnButton_Click">
@@ -110,72 +110,195 @@
                     </Grid>
                 </Border>
 
-                <!-- Section 1: 基础与窗口 -->
-                <TextBlock Text="{DynamicResource Lang_SecGeneral}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                <!-- Section 1: 外观与个性化 / Appearance & Personalization -->
+                <TextBlock Text="{DynamicResource Lang_SecTheme}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <StackPanel>
+                        <!-- Color Mode (System / Light / Dark) -->
+                        <Grid Margin="0,3">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Lang_ThemeTitle}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_ThemeDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
+                            </StackPanel>
+
+                            <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="{DynamicResource Theme_SegmentBackground}" CornerRadius="8" Padding="3">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="ThemeAutoButton"
+                                            Content="{DynamicResource Lang_ThemeAuto}"
+                                            FontSize="11.5" FontWeight="SemiBold"
+                                            Padding="10,5"
+                                            Background="{DynamicResource Theme_AccentBrush}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="ThemeAutoButton_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <Button x:Name="ThemeLightButton"
+                                            Content="{DynamicResource Lang_ThemeLight}"
+                                            FontSize="11.5" FontWeight="SemiBold"
+                                            Padding="10,5"
+                                            Background="Transparent"
+                                            Foreground="{DynamicResource Theme_TextSecondary}"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="ThemeLightButton_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <Button x:Name="ThemeDarkButton"
+                                            Content="{DynamicResource Lang_ThemeDark}"
+                                            FontSize="11.5" FontWeight="SemiBold"
+                                            Padding="10,5"
+                                            Background="Transparent"
+                                            Foreground="{DynamicResource Theme_TextSecondary}"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="ThemeDarkButton_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Separator Background="{DynamicResource Theme_HeaderBorder}" Margin="0,8"/>
+
+                        <!-- Accent Color Mode (System Accent / DeepSeek Blue) -->
+                        <Grid Margin="0,3">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Lang_AccentTitle}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_AccentDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
+                            </StackPanel>
+
+                            <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="{DynamicResource Theme_SegmentBackground}" CornerRadius="8" Padding="3">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="AccentSystemButton"
+                                            FontSize="11.5" FontWeight="SemiBold"
+                                            Padding="10,5"
+                                            Background="{DynamicResource Theme_AccentBrush}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="AccentSystemButton_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Ellipse x:Name="WindowsAccentPreviewDot"
+                                                     Width="9" Height="9"
+                                                     Margin="0,0,5,0"
+                                                     Stroke="White" StrokeThickness="1"/>
+                                            <TextBlock Text="{DynamicResource Lang_AccentSystem}"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="AccentDeepSeekButton"
+                                            FontSize="11.5" FontWeight="SemiBold"
+                                            Padding="10,5"
+                                            Background="Transparent"
+                                            Foreground="{DynamicResource Theme_TextSecondary}"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="AccentDeepSeekButton_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Ellipse Width="9" Height="9"
+                                                     Fill="#0052D9"
+                                                     Margin="0,0,5,0"
+                                                     Stroke="#94A3B8" StrokeThickness="0.8"/>
+                                            <TextBlock Text="{DynamicResource Lang_AccentDeepSeek}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section 2: 基础与窗口 -->
+                <TextBlock Text="{DynamicResource Lang_SecGeneral}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <StackPanel>
                         <!-- Auto Start -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Lang_AutoStart}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="{DynamicResource Lang_AutoStartDesc}" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoStart}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoStartDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingAutoStart" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoStart_Click"/>
                         </Grid>
-                        <Separator Background="#F1F5F9" Margin="0,8"/>
+                        <Separator Background="{DynamicResource Theme_HeaderBorder}" Margin="0,8"/>
 
                         <!-- Auto Collapse -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Lang_AutoCollapse}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="{DynamicResource Lang_AutoCollapseDesc}" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoCollapse}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_AutoCollapseDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingAutoCollapse" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingAutoCollapse_Click"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- Section 2: 主界面位置记忆 -->
-                <TextBlock Text="{DynamicResource Lang_SecPositionMemory}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                <!-- Section 3: 主界面位置记忆 -->
+                <TextBlock Text="{DynamicResource Lang_SecPositionMemory}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <StackPanel>
                         <!-- Remember X -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Lang_RememberX}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="{DynamicResource Lang_RememberXDesc}" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberX}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberXDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingRememberX" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberX_Click"/>
                         </Grid>
-                        <Separator Background="#F1F5F9" Margin="0,8"/>
+                        <Separator Background="{DynamicResource Theme_HeaderBorder}" Margin="0,8"/>
 
                         <!-- Remember Y -->
                         <Grid Margin="0,4">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Lang_RememberY}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="{DynamicResource Lang_RememberYDesc}" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberY}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_RememberYDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                             </StackPanel>
                             <CheckBox x:Name="SettingRememberY" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingRememberY_Click"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- Section 3: 快捷键与唤醒 -->
-                <TextBlock Text="{DynamicResource Lang_SecHotkey}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
+                <!-- Section 4: 快捷键与唤醒 -->
+                <TextBlock Text="{DynamicResource Lang_SecHotkey}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <Grid Margin="0,2">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Lang_GlobalHotkey}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                                <TextBlock Text="{DynamicResource Lang_HotkeyDesc}" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="{DynamicResource Lang_GlobalHotkey}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                                <TextBlock Text="{DynamicResource Lang_HotkeyDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                             </StackPanel>
 
                             <!-- Hotkey Recorder and Clear Buttons -->
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                 <!-- Click to Record Hotkey Box -->
                                 <Border x:Name="HotkeyRecordBorder"
-                                        Background="#F8FAFC"
-                                        BorderBrush="#CBD5E1"
+                                        Background="{DynamicResource Theme_SegmentBackground}"
+                                        BorderBrush="{DynamicResource Theme_CardInnerBorder}"
                                         BorderThickness="1.2"
                                         CornerRadius="6"
                                         Padding="8,5"
@@ -191,7 +314,7 @@
                                                    Text="Alt+D"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#0052D9"
+                                                   Foreground="{DynamicResource Theme_AccentBrush}"
                                                    VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
@@ -201,35 +324,35 @@
                                         Margin="6,0,0,0"
                                         Padding="6,4"
                                         Height="28"
-                                        Background="#F1F5F9"
+                                        Background="{DynamicResource Theme_SegmentBackground}"
                                         BorderThickness="0"
                                         Cursor="Hand"
                                         Click="ClearHotkeyButton_Click">
-                                    <TextBlock Text="{DynamicResource Lang_HotkeyDisabledChip}" FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="{DynamicResource Lang_HotkeyDisabledChip}" FontSize="11" Foreground="{DynamicResource Theme_TextSecondary}"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
 
                         <!-- Quick Preset Chips -->
                         <WrapPanel Margin="0,10,0,2">
-                            <TextBlock Text="Presets:" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Alt+D">
-                                <TextBlock Text="Alt+D" FontSize="11" Foreground="#475569"/>
+                            <TextBlock Text="Presets:" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="{DynamicResource Theme_SegmentBackground}" Click="PresetChip_Click" Tag="Alt+D">
+                                <TextBlock Text="Alt+D" FontSize="11" Foreground="{DynamicResource Theme_TextSecondary}"/>
                             </Button>
-                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Alt+Space">
-                                <TextBlock Text="Alt+Space" FontSize="11" Foreground="#475569"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="{DynamicResource Theme_SegmentBackground}" Click="PresetChip_Click" Tag="Alt+Space">
+                                <TextBlock Text="Alt+Space" FontSize="11" Foreground="{DynamicResource Theme_TextSecondary}"/>
                             </Button>
-                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Ctrl+Alt+D">
-                                <TextBlock Text="Ctrl+Alt+D" FontSize="11" Foreground="#475569"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="{DynamicResource Theme_SegmentBackground}" Click="PresetChip_Click" Tag="Ctrl+Alt+D">
+                                <TextBlock Text="Ctrl+Alt+D" FontSize="11" Foreground="{DynamicResource Theme_TextSecondary}"/>
                             </Button>
-                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="Ctrl+Shift+D">
-                                <TextBlock Text="Ctrl+Shift+D" FontSize="11" Foreground="#475569"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="{DynamicResource Theme_SegmentBackground}" Click="PresetChip_Click" Tag="Ctrl+Shift+D">
+                                <TextBlock Text="Ctrl+Shift+D" FontSize="11" Foreground="{DynamicResource Theme_TextSecondary}"/>
                             </Button>
-                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="F9">
-                                <TextBlock Text="F9" FontSize="11" Foreground="#475569"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="{DynamicResource Theme_SegmentBackground}" Click="PresetChip_Click" Tag="F9">
+                                <TextBlock Text="F9" FontSize="11" Foreground="{DynamicResource Theme_TextSecondary}"/>
                             </Button>
-                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="#F1F5F9" Click="PresetChip_Click" Tag="无">
-                                <TextBlock Text="{DynamicResource Lang_HotkeyDisabledChip}" FontSize="11" Foreground="#94A3B8"/>
+                            <Button Style="{StaticResource HeaderBtnStyle}" Width="Auto" Height="22" Padding="6,2" Margin="2" Background="{DynamicResource Theme_SegmentBackground}" Click="PresetChip_Click" Tag="无">
+                                <TextBlock Text="{DynamicResource Lang_HotkeyDisabledChip}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                             </Button>
                         </WrapPanel>
 
@@ -242,61 +365,63 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Section 4: 性能与内存优化 -->
-                <TextBlock Text="{DynamicResource Lang_SecPerformance}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                <!-- Section 5: 性能与内存优化 -->
+                <TextBlock Text="{DynamicResource Lang_SecPerformance}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,4">
                         <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
-                            <TextBlock Text="{DynamicResource Lang_Suspend}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="{DynamicResource Lang_SuspendDesc}" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_Suspend}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                            <TextBlock Text="{DynamicResource Lang_SuspendDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                         </StackPanel>
                         <CheckBox x:Name="SettingSuspend" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingSuspend_Click"/>
                     </Grid>
                 </Border>
 
-                <!-- Section 5: 尺寸与重置 -->
-                <TextBlock Text="{DynamicResource Lang_SecLayout}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                <!-- Section 6: 尺寸与重置 -->
+                <TextBlock Text="{DynamicResource Lang_SecLayout}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,4">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Lang_ResetSize}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="{DynamicResource Lang_ResetSizeDesc}" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_ResetSize}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                            <TextBlock Text="{DynamicResource Lang_ResetSizeDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                         </StackPanel>
                         <Button Content="{DynamicResource Lang_BtnReset}"
                                 Padding="12,5"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Background="#F1F5F9"
-                                BorderBrush="#CBD5E1"
+                                Background="{DynamicResource Theme_SegmentBackground}"
+                                BorderBrush="{DynamicResource Theme_CardInnerBorder}"
+                                Foreground="{DynamicResource Theme_TextPrimary}"
                                 Cursor="Hand"
                                 Click="ResetSizeButton_Click"/>
                     </Grid>
                 </Border>
 
-                <!-- Section 6: 数据与存储 -->
-                <TextBlock Text="{DynamicResource Lang_SecData}" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,6"/>
-                <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                <!-- Section 7: 数据与存储 -->
+                <TextBlock Text="{DynamicResource Lang_SecData}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Theme_TextSecondary}" Margin="2,0,0,6"/>
+                <Border Background="{DynamicResource Theme_CardInnerBackground}" CornerRadius="10" BorderBrush="{DynamicResource Theme_CardInnerBorder}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
                     <Grid Margin="0,4">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Lang_LocalData}" FontSize="13" FontWeight="Medium" Foreground="#1E293B"/>
-                            <TextBlock Text="{DynamicResource Lang_LocalDataDesc}" FontSize="11" Foreground="#94A3B8"/>
+                            <TextBlock Text="{DynamicResource Lang_LocalData}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource Theme_TextPrimary}"/>
+                            <TextBlock Text="{DynamicResource Lang_LocalDataDesc}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}"/>
                         </StackPanel>
                         <Button Content="{DynamicResource Lang_BtnOpenDir}"
                                 Padding="12,5"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Background="#F1F5F9"
-                                BorderBrush="#CBD5E1"
+                                Background="{DynamicResource Theme_SegmentBackground}"
+                                BorderBrush="{DynamicResource Theme_CardInnerBorder}"
+                                Foreground="{DynamicResource Theme_TextPrimary}"
                                 Cursor="Hand"
                                 Click="OpenDataDirButton_Click"/>
                     </Grid>
                 </Border>
 
-                <!-- Section 7: 关于 -->
+                <!-- Section 8: 关于 -->
                 <Border Background="Transparent" Padding="4,10" HorizontalAlignment="Center">
                     <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="DeskSeek v1.1.0" FontSize="12" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Lang_AboutSlogan}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="DeskSeek v1.1.0" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Theme_TextSecondary}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource Lang_AboutSlogan}" FontSize="11" Foreground="{DynamicResource Theme_TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

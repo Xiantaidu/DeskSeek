@@ -57,6 +57,18 @@ namespace DeskSeek.Services
             ["Lang_LanguageZh"] = "简体中文",
             ["Lang_LanguageEn"] = "English",
 
+            // Section Theme
+            ["Lang_SecTheme"] = "外观与个性化",
+            ["Lang_ThemeTitle"] = "色彩模式",
+            ["Lang_ThemeDesc"] = "支持跟随 Windows 系统自动切换，或强制指定浅色/深色",
+            ["Lang_ThemeAuto"] = "跟随系统",
+            ["Lang_ThemeLight"] = "浅色",
+            ["Lang_ThemeDark"] = "深色",
+            ["Lang_AccentTitle"] = "主题强调色",
+            ["Lang_AccentDesc"] = "可选择跟随 Windows 系统个性化强调色，或使用 DeepSeek 经典蓝",
+            ["Lang_AccentSystem"] = "Windows 系统色",
+            ["Lang_AccentDeepSeek"] = "DeepSeek 蓝",
+
             ["Lang_SecGeneral"] = "基础与窗口",
             ["Lang_AutoStart"] = "开机自启",
             ["Lang_AutoStartDesc"] = "系统开机后自动常驻系统托盘",
@@ -156,6 +168,18 @@ namespace DeskSeek.Services
             ["Lang_LanguageDesc"] = "Instantly switch language without restarting the app",
             ["Lang_LanguageZh"] = "简体中文",
             ["Lang_LanguageEn"] = "English",
+
+            // Section Theme
+            ["Lang_SecTheme"] = "Appearance & Personalization",
+            ["Lang_ThemeTitle"] = "Color Mode",
+            ["Lang_ThemeDesc"] = "Follow Windows system theme, or force Light/Dark mode",
+            ["Lang_ThemeAuto"] = "System",
+            ["Lang_ThemeLight"] = "Light",
+            ["Lang_ThemeDark"] = "Dark",
+            ["Lang_AccentTitle"] = "Accent Color",
+            ["Lang_AccentDesc"] = "Follow Windows system accent color, or use DeepSeek Blue",
+            ["Lang_AccentSystem"] = "Windows Accent",
+            ["Lang_AccentDeepSeek"] = "DeepSeek Blue",
 
             ["Lang_SecGeneral"] = "General & Window",
             ["Lang_AutoStart"] = "Launch on Startup",

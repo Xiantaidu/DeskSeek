@@ -52,6 +52,9 @@ namespace DeskSeek.Services
                 _webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 _webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
 
+                SetTheme(ThemeService.Instance.CurrentThemeMode, ThemeService.Instance.IsDark);
+                ThemeService.Instance.ThemeChanged += (isDark, accent) => SetTheme(ThemeService.Instance.CurrentThemeMode, isDark);
+
                 // Open external links in default system browser
                 _webView.CoreWebView2.NewWindowRequested += (s, args) =>
                 {
@@ -197,6 +200,23 @@ namespace DeskSeek.Services
             catch { }
 
             return GetCurrentUrl();
+        }
+
+        public void SetTheme(string themeMode, bool isDark)
+        {
+            if (_webView.CoreWebView2 != null)
+            {
+                try
+                {
+                    _webView.CoreWebView2.Profile.PreferredColorScheme = themeMode switch
+                    {
+                        ThemeService.ModeLight => Microsoft.Web.WebView2.Core.CoreWebView2PreferredColorScheme.Light,
+                        ThemeService.ModeDark => Microsoft.Web.WebView2.Core.CoreWebView2PreferredColorScheme.Dark,
+                        _ => Microsoft.Web.WebView2.Core.CoreWebView2PreferredColorScheme.Auto
+                    };
+                }
+                catch { }
+            }
         }
     }
 }

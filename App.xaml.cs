@@ -54,6 +54,7 @@ namespace DeskSeek
 
             _settingsService = new SettingsService();
             LocalizationService.Instance.Initialize(_settingsService.Current.Language);
+            ThemeService.Instance.Initialize(_settingsService.Current.ThemeMode, _settingsService.Current.AccentMode);
 
             // Initialize Windows
             _ballWindow = new FloatingBallWindow(_settingsService);
@@ -63,7 +64,7 @@ namespace DeskSeek
             IntPtr ballHwnd = new System.Windows.Interop.WindowInteropHelper(_ballWindow).EnsureHandle();
             _drawerWindow.SetBallWindowHandle(ballHwnd);
 
-            // Listen for second-instance wake up message
+            // Listen for second-instance wake up message and Windows theme changes
             var hwndSource = System.Windows.Interop.HwndSource.FromHwnd(ballHwnd);
             hwndSource?.AddHook((IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
             {
@@ -71,6 +72,10 @@ namespace DeskSeek
                 {
                     _drawerWindow?.ShowDrawer(_ballWindow.IsCurrentlyOnRightSide());
                     handled = true;
+                }
+                else if (msg == 0x001A) // WM_SETTINGCHANGE
+                {
+                    ThemeService.Instance.OnWindowsSettingChanged();
                 }
                 return IntPtr.Zero;
             });

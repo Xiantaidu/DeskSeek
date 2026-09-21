@@ -6,7 +6,9 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using DeskSeek.Services;
 using UserControl = System.Windows.Controls.UserControl;
+using Application = System.Windows.Application;
 using Color = System.Windows.Media.Color;
+using Brush = System.Windows.Media.Brush;
 using Cursors = System.Windows.Input.Cursors;
 
 namespace DeskSeek.Views.Controls
@@ -23,6 +25,7 @@ namespace DeskSeek.Views.Controls
         {
             InitializeComponent();
             LocalizationService.Instance.LanguageChanged += _ => UpdateButtonText();
+            ThemeService.Instance.ThemeChanged += (isDark, accent) => UpdateButtonColor();
         }
 
         public void Initialize(SettingsService settingsService)
@@ -35,6 +38,25 @@ namespace DeskSeek.Views.Controls
             _settingsService = settingsService;
         }
 
+        private Brush GetAccentBrush() =>
+            Application.Current?.Resources["Theme_AccentBrush"] as Brush ?? new SolidColorBrush(ThemeService.Instance.CurrentAccentColor);
+
+        private Brush GetDisabledBrush() =>
+            Application.Current?.Resources["Theme_ResizeBar"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+
+        private void UpdateButtonColor()
+        {
+            if (DisclaimerAgreeButton == null) return;
+            if (DisclaimerCheckBox.IsChecked == true)
+            {
+                DisclaimerAgreeButton.Background = GetAccentBrush();
+            }
+            else
+            {
+                DisclaimerAgreeButton.Background = GetDisabledBrush();
+            }
+        }
+
         public void StartCountdown()
         {
             if (_disclaimerTimer != null) return;
@@ -43,7 +65,7 @@ namespace DeskSeek.Views.Controls
             DisclaimerCheckBox.IsEnabled = false;
             DisclaimerCheckBox.IsChecked = false;
             DisclaimerAgreeButton.IsEnabled = false;
-            DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+            DisclaimerAgreeButton.Background = GetDisabledBrush();
             DisclaimerAgreeButton.Cursor = Cursors.No;
             UpdateButtonText();
 
@@ -91,13 +113,13 @@ namespace DeskSeek.Views.Controls
             if (isChecked)
             {
                 DisclaimerAgreeButton.IsEnabled = true;
-                DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                DisclaimerAgreeButton.Background = GetAccentBrush();
                 DisclaimerAgreeButton.Cursor = Cursors.Hand;
             }
             else
             {
                 DisclaimerAgreeButton.IsEnabled = false;
-                DisclaimerAgreeButton.Background = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+                DisclaimerAgreeButton.Background = GetDisabledBrush();
                 DisclaimerAgreeButton.Cursor = Cursors.No;
             }
             UpdateButtonText();

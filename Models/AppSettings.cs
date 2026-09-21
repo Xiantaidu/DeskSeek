@@ -22,6 +22,8 @@ namespace DeskSeek.Models
         public bool AutoCollapse { get; set; } = true;
         public bool SuspendWhenHidden { get; set; } = false;
         public string Language { get; set; } = "zh-CN";
+        public string ThemeMode { get; set; } = "System"; // "System", "Light", "Dark"
+        public string AccentMode { get; set; } = "System"; // "System", "DeepSeekBlue"
         public bool DisclaimerAccepted { get; set; } = false;
         public bool RememberX { get; set; } = true;
         public bool RememberY { get; set; } = false;

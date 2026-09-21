@@ -9,7 +9,9 @@ using System.Windows.Media;
 using DeskSeek.Services;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using UserControl = System.Windows.Controls.UserControl;
+using Application = System.Windows.Application;
 using Color = System.Windows.Media.Color;
+using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Cursors = System.Windows.Input.Cursors;
 
@@ -26,6 +28,16 @@ namespace DeskSeek.Views.Controls
         public SettingsOverlay()
         {
             InitializeComponent();
+
+            ThemeService.Instance.ThemeChanged += (isDark, accent) =>
+            {
+                UpdateLanguageUi();
+                UpdateThemeUi();
+                if (_settingsService != null)
+                {
+                    UpdateHotkeyDisplay(_settingsService.Current.Hotkey);
+                }
+            };
         }
 
         public void Initialize(SettingsService settingsService)
@@ -39,6 +51,7 @@ namespace DeskSeek.Views.Controls
             if (_settingsService == null) return;
 
             UpdateLanguageUi();
+            UpdateThemeUi();
 
             SettingAutoStart.IsChecked = AutoStartService.IsAutoStartEnabled();
             SettingAutoCollapse.IsChecked = _settingsService.Current.AutoCollapse;
@@ -79,21 +92,100 @@ namespace DeskSeek.Views.Controls
         private void UpdateLanguageUi()
         {
             bool isZh = LocalizationService.Instance.CurrentLanguage != LocalizationService.English;
+            var accentBrush = Application.Current?.Resources["Theme_AccentBrush"] as Brush ?? new SolidColorBrush(ThemeService.Instance.CurrentAccentColor);
+            var textSecondary = Application.Current?.Resources["Theme_TextSecondary"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
 
-            LangZhButton.Background = isZh
-                ? new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9))
-                : Brushes.Transparent;
-            LangZhButton.Foreground = isZh
-                ? Brushes.White
-                : new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+            LangZhButton.Background = isZh ? accentBrush : Brushes.Transparent;
+            LangZhButton.Foreground = isZh ? Brushes.White : textSecondary;
 
-            LangEnButton.Background = !isZh
-                ? new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9))
-                : Brushes.Transparent;
-            LangEnButton.Foreground = !isZh
-                ? Brushes.White
-                : new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+            LangEnButton.Background = !isZh ? accentBrush : Brushes.Transparent;
+            LangEnButton.Foreground = !isZh ? Brushes.White : textSecondary;
         }
+
+        #region Theme & Accent Handlers
+
+        private void ThemeAutoButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetThemeMode(ThemeService.ModeSystem);
+        }
+
+        private void ThemeLightButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetThemeMode(ThemeService.ModeLight);
+        }
+
+        private void ThemeDarkButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetThemeMode(ThemeService.ModeDark);
+        }
+
+        private void SetThemeMode(string mode)
+        {
+            ThemeService.Instance.SetThemeMode(mode);
+            if (_settingsService != null)
+            {
+                _settingsService.Current.ThemeMode = mode;
+                _settingsService.Save();
+            }
+            UpdateThemeUi();
+        }
+
+        private void AccentSystemButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetAccentMode(ThemeService.AccentSystem);
+        }
+
+        private void AccentDeepSeekButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetAccentMode(ThemeService.AccentDeepSeek);
+        }
+
+        private void SetAccentMode(string mode)
+        {
+            ThemeService.Instance.SetAccentMode(mode);
+            if (_settingsService != null)
+            {
+                _settingsService.Current.AccentMode = mode;
+                _settingsService.Save();
+            }
+            UpdateThemeUi();
+        }
+
+        private void UpdateThemeUi()
+        {
+            var accentBrush = Application.Current?.Resources["Theme_AccentBrush"] as Brush ?? new SolidColorBrush(ThemeService.Instance.CurrentAccentColor);
+            var textSecondary = Application.Current?.Resources["Theme_TextSecondary"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+
+            // Windows Accent preview dot
+            WindowsAccentPreviewDot.Fill = new SolidColorBrush(ThemeService.GetWindowsAccentColor());
+
+            // Color Mode buttons
+            string themeMode = _settingsService?.Current.ThemeMode ?? ThemeService.Instance.CurrentThemeMode;
+            bool isAuto = themeMode == ThemeService.ModeSystem;
+            bool isLight = themeMode == ThemeService.ModeLight;
+            bool isDark = themeMode == ThemeService.ModeDark;
+
+            ThemeAutoButton.Background = isAuto ? accentBrush : Brushes.Transparent;
+            ThemeAutoButton.Foreground = isAuto ? Brushes.White : textSecondary;
+
+            ThemeLightButton.Background = isLight ? accentBrush : Brushes.Transparent;
+            ThemeLightButton.Foreground = isLight ? Brushes.White : textSecondary;
+
+            ThemeDarkButton.Background = isDark ? accentBrush : Brushes.Transparent;
+            ThemeDarkButton.Foreground = isDark ? Brushes.White : textSecondary;
+
+            // Accent Color buttons
+            string accentMode = _settingsService?.Current.AccentMode ?? ThemeService.Instance.CurrentAccentMode;
+            bool isSystemAccent = accentMode != ThemeService.AccentDeepSeek;
+
+            AccentSystemButton.Background = isSystemAccent ? accentBrush : Brushes.Transparent;
+            AccentSystemButton.Foreground = isSystemAccent ? Brushes.White : textSecondary;
+
+            AccentDeepSeekButton.Background = !isSystemAccent ? accentBrush : Brushes.Transparent;
+            AccentDeepSeekButton.Foreground = !isSystemAccent ? Brushes.White : textSecondary;
+        }
+
+        #endregion
 
         private void BackFromSettingsButton_Click(object sender, RoutedEventArgs e)
         {
@@ -169,16 +261,19 @@ namespace DeskSeek.Views.Controls
 
         private void UpdateHotkeyDisplay(string hotkey)
         {
+            var textMuted = Application.Current?.Resources["Theme_TextMuted"] as Brush ?? new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+            var accentBrush = Application.Current?.Resources["Theme_AccentBrush"] as Brush ?? new SolidColorBrush(ThemeService.Instance.CurrentAccentColor);
+
             if (string.IsNullOrWhiteSpace(hotkey) || hotkey == "无" || hotkey.Equals("None", StringComparison.OrdinalIgnoreCase))
             {
                 HotkeyDisplayText.Text = LocalizationService.Instance.GetString("Lang_HotkeyNoneText");
-                HotkeyDisplayText.Foreground = new SolidColorBrush(Color.FromRgb(0x94, 0xA3, 0xB8));
+                HotkeyDisplayText.Foreground = textMuted;
                 HotkeyRecordIcon.Text = "🚫";
             }
             else
             {
                 HotkeyDisplayText.Text = hotkey;
-                HotkeyDisplayText.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+                HotkeyDisplayText.Foreground = accentBrush;
                 HotkeyRecordIcon.Text = "⌨️";
             }
         }
@@ -191,20 +286,23 @@ namespace DeskSeek.Views.Controls
 
         private void StartRecordingHotkey()
         {
+            var accentBrush = Application.Current?.Resources["Theme_AccentBrush"] as Brush ?? new SolidColorBrush(ThemeService.Instance.CurrentAccentColor);
             _isRecordingHotkey = true;
             HotkeyDisplayText.Text = LocalizationService.Instance.GetString("Lang_HotkeyRecordingText");
-            HotkeyDisplayText.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
+            HotkeyDisplayText.Foreground = accentBrush;
             HotkeyRecordIcon.Text = "🔴";
-            HotkeyRecordBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0x00, 0x52, 0xD9));
-            HotkeyRecordBorder.Background = new SolidColorBrush(Color.FromArgb(0x15, 0x00, 0x52, 0xD9));
+            HotkeyRecordBorder.BorderBrush = accentBrush;
+            HotkeyRecordBorder.Background = new SolidColorBrush(Color.FromArgb(0x18, ThemeService.Instance.CurrentAccentColor.R, ThemeService.Instance.CurrentAccentColor.G, ThemeService.Instance.CurrentAccentColor.B));
             HotkeyRecordBorder.Focus();
         }
 
         public void StopRecordingHotkey()
         {
             _isRecordingHotkey = false;
-            HotkeyRecordBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
-            HotkeyRecordBorder.Background = new SolidColorBrush(Color.FromRgb(0xF8, 0xFA, 0xFC));
+            var cardBorder = Application.Current?.Resources["Theme_CardInnerBorder"] as Brush ?? new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE1));
+            var segmentBg = Application.Current?.Resources["Theme_SegmentBackground"] as Brush ?? new SolidColorBrush(Color.FromRgb(0xF8, 0xFA, 0xFC));
+            HotkeyRecordBorder.BorderBrush = cardBorder;
+            HotkeyRecordBorder.Background = segmentBg;
             if (_settingsService != null)
             {
                 UpdateHotkeyDisplay(_settingsService.Current.Hotkey);
